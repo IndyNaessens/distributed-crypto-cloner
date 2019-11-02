@@ -36,6 +36,7 @@ defmodule AssignmentOneTest do
   # Tests for Logger
   test "Logger can print" do
     Logger.log("LOGGER TEST, If you see this put value to true")
+
     assert true
   end
 
@@ -47,7 +48,14 @@ defmodule AssignmentOneTest do
     :timer.sleep(3000)
     RateLimiter.change_rate_limit(5)
     :timer.sleep(3000)
-    assert true
+    assert false
+  end
+
+  test "After calling change_rate_limit/1, the limit is changed to the value provided as argument" do
+    old_rate_limit = RateLimiter.current_rate_limit()
+    RateLimiter.change_rate_limit(old_rate_limit + 1)
+
+    assert old_rate_limit + 1 == RateLimiter.current_rate_limit()
   end
 
   # Tests for CoinDataRetriever
