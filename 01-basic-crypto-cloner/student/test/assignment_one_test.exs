@@ -1,7 +1,7 @@
 defmodule AssignmentOneTest do
   use ExUnit.Case
 
-  alias AssignmentOne.{Logger, ProcessManager, RateLimiter}
+  alias AssignmentOne.{Logger, ProcessManager, RateLimiter, CoindataRetriever}
 
   test "Necessary processes are alive" do
     # Normally you shouldn't adjust this, but feel free to raise the amount if necessary
@@ -14,9 +14,10 @@ defmodule AssignmentOneTest do
   # Tests for ProcessManager
   test "ProcessManager returns list of currency pairs" do
     procs = ProcessManager.retrieve_coin_processes()
+
     assert Enum.all?(procs, &is_tuple/1)
     assert Enum.all?(procs, fn {bin, pid} -> is_binary(bin) and is_pid(pid) end)
-    assert length(procs) > 100
+    assert length(procs) > 90
   end
 
   test "ProcessManager restarts dead processes" do
@@ -29,8 +30,10 @@ defmodule AssignmentOneTest do
     |> elem(1)
     |> Process.exit(:kill)
 
-    assert ProcessManager.retrieve_coin_processes() |> length() ==
-             amount_of_processes
+    assert ProcessManager.retrieve_coin_processes() |> length() == amount_of_processes
+
+    assert ProcessManager.retrieve_coin_processes()
+           |> Enum.all?(fn {_, pid} -> Process.alive?(pid) == true end) == true
   end
 
   # Tests for Logger

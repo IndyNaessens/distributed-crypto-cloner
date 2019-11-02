@@ -22,6 +22,6 @@ defmodule AssignmentOne.Logger do
 
   ### HELPERS ###
   defp write_to_terminal(message) when is_binary(message) do
-    IO.puts message
+    IO.puts(message)
   end
 end
