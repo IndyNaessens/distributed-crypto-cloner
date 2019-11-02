@@ -1,7 +1,7 @@
 defmodule AssignmentOne.Startup do
   require IEx
 
-  # This is just here to help you. 
+  # This is just here to help you.
   # If you prefer another implementation, go ahead and change this (with the according startup callback)
   @from (DateTime.utc_now() |> DateTime.to_unix()) - 60 * 60 * 24 * 7
   @until DateTime.utc_now() |> DateTime.to_unix()
@@ -18,7 +18,9 @@ defmodule AssignmentOne.Startup do
     AssignmentOne.ProcessManager.start_link()
     # Implement this module
     AssignmentOne.RateLimiter.start_link(Map.from_struct(info))
-    retrieve_coin_pairs() |> start_processes(info)
+
+    ## TOOD Unremove
+    #retrieve_coin_pairs() |> start_processes(info)
 
     keep_running_until_stopped()
   end
