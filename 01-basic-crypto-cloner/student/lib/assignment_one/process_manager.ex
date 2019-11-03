@@ -33,7 +33,7 @@ defmodule AssignmentOne.ProcessManager do
     {:ok, pid} = AssignmentOne.CoindataRetriever.start(coin_name)
     Process.monitor(pid)
 
-    {:noreply, state ++ [{coin_name, pid}]}
+    {:noreply, Enum.concat(state, [{coin_name, pid}])}
   end
 
   def handle_cast({:send_request_to_all, request}, state) do

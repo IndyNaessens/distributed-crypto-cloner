@@ -47,7 +47,9 @@ defmodule AssignmentOne.CoindataRetriever do
 
   def handle_cast(:work_permission_ok, state) do
     # get time frames
-    [first_time | other_times] = Map.get(state, :time_frames)
+    first_time =
+      Map.get(state, :time_frames)
+      |> List.first()
 
     # get current hist
     hist = Map.get(state, :history)
@@ -60,8 +62,8 @@ defmodule AssignmentOne.CoindataRetriever do
     # new state
     new_state =
       state
-      |> Map.replace!(:history, hist ++ updated_hist)
-      |> Map.replace!(:time_frames, other_times)
+      |> Map.replace!(:history, Enum.concat(hist, updated_hist))
+      |> Map.update!(:time_frames, fn lst -> List.delete(lst, first_time) end)
 
     # change state
     {:noreply, new_state}
@@ -71,7 +73,11 @@ defmodule AssignmentOne.CoindataRetriever do
 
   ### HELPERS
   defp do_work(coin_name, %{:from => f, :until => u}) do
-    AssignmentOne.PoloniexAPiCaller.return_trade_history(coin_name, f, u)
+    trade_history = AssignmentOne.PoloniexAPiCaller.return_trade_history(coin_name, f, u)
     AssignmentOne.Logger.log("Request finished for coin: #{coin_name}")
+
+    trade_history
   end
+
+  defp do_work(_, _), do: []
 end

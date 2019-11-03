@@ -10,6 +10,8 @@ defmodule AssignmentOne.RateLimiter do
       %{:req_per_sec => @default_rate_limit, :worker_requests => []},
       name: __MODULE__
     )
+
+    send(__MODULE__, :handle_queue)
   end
 
   def change_rate_limit(limit) when is_integer(limit) do
@@ -73,7 +75,7 @@ defmodule AssignmentOne.RateLimiter do
       state
       |> Map.get(:worker_requests)
 
-    {:noreply, Map.replace!(state, :worker_requests, queue ++ [pid])}
+    {:noreply, Map.replace!(state, :worker_requests, Enum.concat(queue, [pid]))}
   end
 
   def handle_cast({:change_rate_limit, limit}, state) do
@@ -81,6 +83,22 @@ defmodule AssignmentOne.RateLimiter do
   end
 
   ### INFO ###
+  def handle_info(:handle_queue, state) do
+    pid =
+      state
+      |> Map.get(:worker_requests)
+      |> List.first()
+
+    notify_worker(pid)
+
+    Process.send_after(
+      __MODULE__,
+      :handle_queue,
+      div(1000, Map.get(state, :req_per_sec, @default_rate_limit))
+    )
+
+    {:noreply, Map.update!(state, :worker_requests, fn lst -> List.delete(lst, pid) end)}
+  end
 
   ### HELPERS ###
   defp notify_worker(pid) when is_pid(pid), do: GenServer.cast(pid, :work_permission_ok)
