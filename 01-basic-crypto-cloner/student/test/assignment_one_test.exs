@@ -4,8 +4,9 @@ defmodule AssignmentOneTest do
   alias AssignmentOne.{Logger, ProcessManager, RateLimiter, CoindataRetriever}
 
   test "Necessary processes are alive" do
-    # Normally you shouldn't adjust this, but feel free to raise the amount if necessary
+    # Test are run in random order every time so sometimes coin data isn't there yet etc
     :timer.sleep(500)
+
     assert Process.whereis(Logger) != nil
     assert Process.whereis(ProcessManager) != nil
     assert Process.whereis(RateLimiter) != nil
@@ -13,6 +14,9 @@ defmodule AssignmentOneTest do
 
   # Tests for ProcessManager
   test "ProcessManager returns list of currency pairs" do
+    # Test are run in random order every time so sometimes coin data isn't there yet etc
+    :timer.sleep(1000)
+
     procs = ProcessManager.retrieve_coin_processes()
 
     assert Enum.all?(procs, &is_tuple/1)
@@ -21,8 +25,9 @@ defmodule AssignmentOneTest do
   end
 
   test "ProcessManager restarts dead processes" do
-    # Normally you shouldn't adjust this, but feel free to raise the amount if necessary
-    :timer.sleep(500)
+    # Test are run in random order every time so sometimes coin data isn't there yet etc
+    :timer.sleep(1000)
+
     amount_of_processes = ProcessManager.retrieve_coin_processes() |> length()
 
     ProcessManager.retrieve_coin_processes()
@@ -63,8 +68,11 @@ defmodule AssignmentOneTest do
 
   # Tests for CoinDataRetriever
   test "CoinDataRetriever actually gets new values" do
+    # Test are run in random order every time so sometimes coin data isn't there yet etc
+    :timer.sleep(1000)
+
     pid =
-      ProcessManager.retrieve_coin_processes()
+      AssignmentOne.ProcessManager.retrieve_coin_processes()
       |> Enum.filter(fn {coin, _pid} -> coin == "BTC_DGB" end)
       |> List.first()
       |> elem(1)
