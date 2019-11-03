@@ -1,4 +1,10 @@
 defmodule AssignmentOne.PoloniexAPiCaller do
+  @moduledoc """
+  A limited implementation of the PoloniexAPiCaller.
+
+  Info => https://docs.poloniex.com
+  """
+
   @url "https://poloniex.com/public"
 
   ### API

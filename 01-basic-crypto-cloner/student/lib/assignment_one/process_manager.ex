@@ -1,4 +1,17 @@
 defmodule AssignmentOne.ProcessManager do
+  @moduledoc """
+  A process manager that handles CoindataRetriever processes.
+
+  State:
+  We keep a list of all started CoindataRetriever processes.
+  Each entry in the list is a tuple containg 2 elements
+
+  First element => the name of the coin
+  Second element => the pid of the started CoindataRetriever
+
+  When processes exit for any reason we will simply start
+  a new CoindataRetriever process that wil handle the same coin.
+  """
   use GenServer
 
   ### API ###

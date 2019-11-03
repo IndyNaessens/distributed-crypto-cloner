@@ -1,4 +1,9 @@
 defmodule AssignmentOne.Logger do
+  @moduledoc """
+  Simple logger that can log messages to the terminal.
+
+  We don't keep any state.
+  """
   use GenServer
 
   ### API ###

@@ -1,4 +1,26 @@
 defmodule AssignmentOne.CoindataRetriever do
+  @moduledoc """
+  The purpose of this module is to get the trade history for a specifc coin
+  using the AssignmentOne.PoloniexAPiCaller module.
+
+  State of this module:
+  coin => The name of the coin we want the trade history from
+  time_frames => We want the trade history between 2 specific dates
+  history => The trade history
+
+  What will this module mostly do? After requesting work
+  permission from the AssignmentOne.RateLimiter, we start
+  retrieving the trade history for the first timeframe
+  in our time_frames.
+
+  So why is time_frames a list? Well the API we are using can only return
+  a maximum of 1000 trades for a specific timeframe. So when we request a
+  timeframe and get the max back we will split that timeframe and keep both
+  timeframes so we now that these are not handles yet
+
+  Look at the function ´handle_history/2´ as an example of the above.
+  """
+
   use GenServer
 
   @from (DateTime.utc_now() |> DateTime.to_unix()) - 60 * 60 * 24 * 7
@@ -55,10 +77,10 @@ defmodule AssignmentOne.CoindataRetriever do
   end
 
   def handle_cast(:work_permission_ok, state) do
-    # get time frames
+    # get earliest timeframe
     first_time_frame =
       Map.get(state, :time_frames)
-      |> List.first()
+      |> Enum.min_by(&Map.get(&1, :from))
 
     # get current hist
     hist = Map.get(state, :history)
@@ -67,7 +89,7 @@ defmodule AssignmentOne.CoindataRetriever do
     updated_hist =
       Map.get(state, :coin)
       |> get_history(first_time_frame)
-      |> handle_history(first_time_frame)
+      |> handle_history(first_time_frame, Map.get(state, :coin))
 
     # new state
     new_state =
@@ -91,9 +113,9 @@ defmodule AssignmentOne.CoindataRetriever do
 
   defp get_history(_, _), do: []
 
-  defp handle_history(history, %{:from => from, :until => until})
+  defp handle_history(history, %{:from => from, :until => until}, coin)
        when is_list(history) and length(history) == 1000 do
-    AssignmentOne.Logger.log("Timeframe too big!")
+    AssignmentOne.Logger.log("Timeframe too big for the coin: #{coin}")
 
     # to DateTime
     {:ok, from} = DateTime.from_unix(from)
@@ -121,7 +143,7 @@ defmodule AssignmentOne.CoindataRetriever do
     []
   end
 
-  defp handle_history(history, _) do
+  defp handle_history(history, _, _) do
     history
   end
 end
