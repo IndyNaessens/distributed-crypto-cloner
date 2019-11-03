@@ -47,12 +47,19 @@ defmodule AssignmentOne.ProcessManager do
 
   ### INFO ###
   def handle_info({:DOWN, _ref, :process, pid_gone, _reason}, state) do
-    # state
-    # |> Enum.find( fn {_, pid} -> pid_gone == pid end )
-    # |> elem(0)
-    # |> start_worker()
-    IO.puts("DOWN: #{inspect(pid_gone)}")
+    # get pair that is down
+    {coin_name, pid} = Enum.find(state, fn {_, pid} -> pid_gone == pid end)
 
-    {:noreply, state}
+    # start a new process and monitor it
+    {:ok, new_pid} = AssignmentOne.CoindataRetriever.start(coin_name)
+    Process.monitor(new_pid)
+
+    # remove it from the list and add the started process
+    new_state =
+      state
+      |> List.delete({coin_name, pid})
+      |> Enum.concat([{coin_name, new_pid}])
+
+    {:noreply, new_state}
   end
 end
