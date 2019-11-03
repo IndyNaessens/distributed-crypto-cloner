@@ -16,9 +16,12 @@ defmodule AssignmentOne.CoindataRetriever do
   So why is time_frames a list? Well the API we are using can only return
   a maximum of 1000 trades for a specific timeframe. So when we request a
   timeframe and get the max back we will split that timeframe and keep both
-  timeframes so we now that these are not handles yet
+  timeframes so we know that we don't have the history for those timeframes
 
   Look at the function ´handle_history/2´ as an example of the above.
+
+  When the ratelimiter gives us permission to work we will take the earliest timeframe
+  and request the trade history for the coin with that timeframe
   """
 
   use GenServer

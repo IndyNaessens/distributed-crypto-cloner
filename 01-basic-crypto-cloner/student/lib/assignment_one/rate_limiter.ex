@@ -3,15 +3,16 @@ defmodule AssignmentOne.RateLimiter do
   A simple rate limiter that talks with CoindataRetriever processes.
 
   State:
-  req_per_sec => The amount of requests can be done in a second
+  req_per_sec => The amount of requests that can be done in a second
   worker_requests => A list of pids
 
   This module will have a list of pids (worker_requests) that
   have asked the rate limiter if they can send a request. The
-  rate limiter will then give each worker the permission to start
+  rate limiter will give each worker the permission to start
   a request by sending the worker a message.
 
-  This will be done
+  This will be done while respecting the amount of requests
+  that can be send in a second. We will not go over this limit
   """
   use GenServer
 

@@ -14,15 +14,21 @@ defmodule AssignmentOne.PoloniexAPiCaller do
     |> handle_response()
   end
 
-  def return_trade_history(currency_pair, start_date_unix, end_date_unix)
-      when is_binary(currency_pair) do
+  def return_trade_history(currency_name, start_date_unix, end_date_unix)
+      when is_binary(currency_name) do
     AssignmentOne.Logger.log(
-      "Requesting coin trade history: #{currency_pair} -> start: #{start_date_unix} end: #{
+      "Requesting coin trade history: #{currency_name} -> start: #{start_date_unix} end: #{
         end_date_unix
       }"
     )
 
-    "#{@url}?command=returnTradeHistory&currencyPair=#{currency_pair}&start=#{start_date_unix}&end=#{
+    AssignmentOne.Logger.log(
+      "Request for coin #{currency_name} is executed at #{
+        DateTime.utc_now() |> DateTime.to_unix()
+      }"
+    )
+
+    "#{@url}?command=returnTradeHistory&currencyPair=#{currency_name}&start=#{start_date_unix}&end=#{
       end_date_unix
     }"
     |> HTTPoison.get()

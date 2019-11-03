@@ -1,6 +1,6 @@
 defmodule AssignmentOne.ProcessManager do
   @moduledoc """
-  A process manager that handles CoindataRetriever processes.
+  A process manager that manages CoindataRetriever processes.
 
   State:
   We keep a list of all started CoindataRetriever processes.
