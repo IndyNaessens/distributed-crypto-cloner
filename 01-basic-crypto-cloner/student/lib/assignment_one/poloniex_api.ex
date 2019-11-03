@@ -29,7 +29,8 @@ defmodule AssignmentOne.PoloniexAPiCaller do
     Poison.Parser.parse!(body, %{})
   end
 
-  defp handle_response({_, %{status_code: _, body: _}}, _) do
+  defp handle_response({_, %{status_code: status_code, body: _}}, _) do
+    AssignmentOne.Logger.log("Failed while handling repsonse, status: #{status_code}")
     %{}
   end
 end

@@ -15,10 +15,15 @@ defmodule AssignmentOne.Logger do
     {:ok, state}
   end
 
+  ### CALLS ###
+
+  ### CASTS ###
   def handle_cast({:simple_log, message}, current_state) do
     write_to_terminal(message)
     {:noreply, current_state}
   end
+
+  ### INFO ###
 
   ### HELPERS ###
   defp write_to_terminal(message) when is_binary(message) do

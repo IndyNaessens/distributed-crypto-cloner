@@ -27,6 +27,8 @@ defmodule AssignmentOne.Startup do
   defp start_processes(pairs) when is_list(pairs) do
     pairs
     |> Enum.each(&AssignmentOne.ProcessManager.start_coin_process(&1))
+
+    #AssignmentOne.ProcessManager.send_request_to_all(:request_work_permission)
   end
 
   defp keep_running_until_stopped() do
