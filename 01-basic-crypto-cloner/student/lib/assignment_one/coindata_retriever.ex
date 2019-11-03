@@ -45,9 +45,18 @@ defmodule AssignmentOne.CoindataRetriever do
     {:noreply, state}
   end
 
+  def handle_cast({:add_timeframe, timeframe}, state) do
+    new_time_frames =
+      state
+      |> Map.get(:time_frames)
+      |> Enum.concat([timeframe])
+
+    {:noreply, Map.replace!(state, :time_frames, new_time_frames)}
+  end
+
   def handle_cast(:work_permission_ok, state) do
     # get time frames
-    first_time =
+    first_time_frame =
       Map.get(state, :time_frames)
       |> List.first()
 
@@ -57,13 +66,14 @@ defmodule AssignmentOne.CoindataRetriever do
     # do the first timeframe and get the hist
     updated_hist =
       Map.get(state, :coin)
-      |> do_work(first_time)
+      |> get_history(first_time_frame)
+      |> handle_history(first_time_frame)
 
     # new state
     new_state =
       state
       |> Map.replace!(:history, Enum.concat(hist, updated_hist))
-      |> Map.update!(:time_frames, fn lst -> List.delete(lst, first_time) end)
+      |> Map.update!(:time_frames, fn lst -> List.delete(lst, first_time_frame) end)
 
     # change state
     {:noreply, new_state}
@@ -72,12 +82,46 @@ defmodule AssignmentOne.CoindataRetriever do
   ### INFO ###
 
   ### HELPERS
-  defp do_work(coin_name, %{:from => f, :until => u}) do
+  defp get_history(coin_name, %{:from => f, :until => u}) do
     trade_history = AssignmentOne.PoloniexAPiCaller.return_trade_history(coin_name, f, u)
     AssignmentOne.Logger.log("Request finished for coin: #{coin_name}")
 
     trade_history
   end
 
-  defp do_work(_, _), do: []
+  defp get_history(_, _), do: []
+
+  defp handle_history(history, %{:from => from, :until => until})
+       when is_list(history) and length(history) == 1000 do
+    AssignmentOne.Logger.log("Timeframe too big!")
+
+    # to DateTime
+    {:ok, from} = DateTime.from_unix(from)
+    {:ok, until} = DateTime.from_unix(until)
+
+    # split timeframe and add it to time_frames
+    in_between_dates = DateTime.add(from, div(DateTime.diff(until, from), 2))
+
+    GenServer.cast(
+      self(),
+      {:add_timeframe,
+       %{:from => from |> DateTime.to_unix(), :until => in_between_dates |> DateTime.to_unix()}}
+    )
+
+    GenServer.cast(
+      self(),
+      {:add_timeframe,
+       %{:from => in_between_dates |> DateTime.to_unix(), :until => until |> DateTime.to_unix()}}
+    )
+
+    # 2 new requests need to be done
+    AssignmentOne.RateLimiter.add_worker_request(self())
+    AssignmentOne.RateLimiter.add_worker_request(self())
+
+    []
+  end
+
+  defp handle_history(history, _) do
+    history
+  end
 end

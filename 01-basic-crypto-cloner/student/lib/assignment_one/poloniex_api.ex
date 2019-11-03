@@ -5,7 +5,7 @@ defmodule AssignmentOne.PoloniexAPiCaller do
   def return_ticker() do
     "#{@url}?command=returnTicker"
     |> HTTPoison.get()
-    |> handle_response(200)
+    |> handle_response()
   end
 
   def return_trade_history(currency_pair, start_date_unix, end_date_unix)
@@ -20,16 +20,15 @@ defmodule AssignmentOne.PoloniexAPiCaller do
       end_date_unix
     }"
     |> HTTPoison.get()
-    |> handle_response(200)
+    |> handle_response()
   end
 
   ### HELPERS
-  defp handle_response({:ok, %{status_code: status, body: body}}, status)
-       when is_integer(status) do
+  defp handle_response({:ok, %{status_code: 200, body: body}}) do
     Poison.Parser.parse!(body, %{})
   end
 
-  defp handle_response({_, %{status_code: status_code, body: _}}, _) do
+  defp handle_response({_, %{status_code: status_code, body: _}}) do
     AssignmentOne.Logger.log("Failed while handling repsonse, status: #{status_code}")
     %{}
   end

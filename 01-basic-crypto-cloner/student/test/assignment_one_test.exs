@@ -50,13 +50,13 @@ defmodule AssignmentOneTest do
 
   # Tests for RateLimiter
   test "RateLimiter its value can be changed" do
-    Logger.log("RATE TEST, If you see the speed of the requests go up, put value to true")
+    Logger.log("RATE TEST, If you see the speed of the requests go up after ~5 seconds, put value to true")
 
     RateLimiter.change_rate_limit(1)
-    :timer.sleep(3000)
+    :timer.sleep(5000)
     RateLimiter.change_rate_limit(5)
     :timer.sleep(3000)
-    assert false
+    assert true
   end
 
   test "After calling change_rate_limit/1, the limit is changed to the value provided as argument" do
