@@ -3,11 +3,10 @@ defmodule AssignmentOne.ProcessManager do
   A process manager that manages CoindataRetriever processes.
 
   State:
-  We keep a list of all started CoindataRetriever processes.
-  Each entry in the list is a tuple containg 2 elements
+  We keep a Map of all started CoindataRetriever processes.
 
-  First element => the name of the coin
-  Second element => the pid of the started CoindataRetriever
+  The key represents the pid
+  And the value consist of the coin_name and the pid as a tuple
 
   When processes exit for any reason we will simply start
   a new CoindataRetriever process that wil handle the same coin.
@@ -16,7 +15,7 @@ defmodule AssignmentOne.ProcessManager do
 
   ### API ###
   def start_link() do
-    GenServer.start_link(__MODULE__, [], name: __MODULE__)
+    GenServer.start_link(__MODULE__, %{}, name: __MODULE__)
   end
 
   def retrieve_coin_processes() do
@@ -38,7 +37,7 @@ defmodule AssignmentOne.ProcessManager do
 
   ### CALLS ###
   def handle_call(:retrieve_coin_processes, _from, state) do
-    {:reply, state, state}
+    {:reply, Map.values(state), state}
   end
 
   ### CASTS ###
@@ -46,11 +45,12 @@ defmodule AssignmentOne.ProcessManager do
     {:ok, pid} = AssignmentOne.CoindataRetriever.start(coin_name)
     Process.monitor(pid)
 
-    {:noreply, Enum.concat(state, [{coin_name, pid}])}
+    {:noreply, Map.put(state, pid, {coin_name, pid})}
   end
 
   def handle_cast({:send_request_to_all, request}, state) do
     state
+    |> Map.values()
     |> Enum.each(fn {_, pid} ->
       GenServer.cast(pid, request)
     end)
@@ -60,19 +60,20 @@ defmodule AssignmentOne.ProcessManager do
 
   ### INFO ###
   def handle_info({:DOWN, _ref, :process, pid_gone, _reason}, state) do
-    # get pair that is down
-    {coin_name, pid} = Enum.find(state, fn {_, pid} -> pid_gone == pid end)
+    # get pair for pid_gone
+    {coin_name, pid_gone} = Map.get(state, pid_gone)
 
     # start a new process and monitor it
-    {:ok, new_pid} = AssignmentOne.CoindataRetriever.start(coin_name)
-    Process.monitor(new_pid)
+    {:ok, pid} = AssignmentOne.CoindataRetriever.start(coin_name)
+    Process.monitor(pid)
 
-    # remove it from the list and add the started process
+    # new state
     new_state =
       state
-      |> List.delete({coin_name, pid})
-      |> Enum.concat([{coin_name, new_pid}])
+      |> Map.delete(pid_gone)
+      |> Map.put(pid, {coin_name, pid})
 
+    # new state needs the new pair
     {:noreply, new_state}
   end
 end
