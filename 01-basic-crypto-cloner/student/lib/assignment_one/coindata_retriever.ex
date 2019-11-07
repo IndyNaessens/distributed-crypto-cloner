@@ -5,23 +5,12 @@ defmodule AssignmentOne.CoindataRetriever do
 
   State of this module:
   coin => The name of the coin we want the trade history from
-  time_frames => We want the trade history between 2 specific dates
+  time_frame => We want the trade history between 2 specific dates
   history => The trade history
 
   What will this module mostly do? After requesting work
   permission from the AssignmentOne.RateLimiter, we start
-  retrieving the trade history for the first timeframe
-  in our time_frames.
-
-  So why is time_frames a list? Well the API we are using can only return
-  a maximum of 1000 trades for a specific timeframe. So when we request a
-  timeframe and get the max back we will split that timeframe and keep both
-  timeframes so we know that we don't have the history for those timeframes
-
-  Look at the function ´handle_history/2´ as an example of the above.
-
-  When the ratelimiter gives us permission to work we will take the earliest timeframe
-  and request the trade history for the coin with that timeframe
+  retrieving the trade history.
   """
 
   use GenServer
@@ -35,7 +24,7 @@ defmodule AssignmentOne.CoindataRetriever do
   def start(coin_name) when is_binary(coin_name) do
     GenServer.start(__MODULE__, %{
       :coin => coin_name,
-      :time_frames => [@default_time_frame],
+      :time_frame => @default_time_frame,
       :history => []
     })
   end
@@ -50,10 +39,6 @@ defmodule AssignmentOne.CoindataRetriever do
   end
 
   ### CALLS ###
-  def handle_call(:state, _from, state) do
-    {:reply, state, state}
-  end
-
   def handle_call(:coin_history, _from, state) do
     coin_hist = {
       Map.get(state, :coin),
@@ -70,83 +55,44 @@ defmodule AssignmentOne.CoindataRetriever do
     {:noreply, state}
   end
 
-  def handle_cast({:add_timeframe, timeframe}, state) do
-    new_time_frames =
-      state
-      |> Map.get(:time_frames)
-      |> Enum.concat([timeframe])
-
-    {:noreply, Map.replace!(state, :time_frames, new_time_frames)}
-  end
-
   def handle_cast(:work_permission_ok, state) do
-    # get earliest timeframe
-    first_time_frame =
-      Map.get(state, :time_frames)
-      |> Enum.min_by(&Map.get(&1, :from))
+    # needed for work
+    {coin_name, %{:from => f, :until => u}} = {Map.get(state, :coin), Map.get(state, :time_frame)}
 
-    # get current hist
-    hist = Map.get(state, :history)
+    # retrieve trade history and potential new from date
+    {history, until, filled} =
+      AssignmentOne.PoloniexAPiCaller.return_trade_history(coin_name, f, u)
+      |> handle_response(u)
 
-    # do the first timeframe and get the hist
-    updated_hist =
-      Map.get(state, :coin)
-      |> get_history(first_time_frame)
-      |> handle_history(first_time_frame, Map.get(state, :coin))
-
-    # new state
+    # include retrieved history and make timeframe smaller
     new_state =
       state
-      |> Map.replace!(:history, Enum.concat(hist, updated_hist))
-      |> Map.update!(:time_frames, fn lst -> List.delete(lst, first_time_frame) end)
+      |> Map.replace!(:time_frame, %{:from => f, :until => until})
+      |> Map.update!(:history, fn current_history ->
+        [history | current_history] |> List.flatten()
+      end)
 
-    # change state
+    # we don't have the whole tradehistory so ask for a new request
+    if filled == :full, do: GenServer.cast(self(), :request_work_permission)
     {:noreply, new_state}
   end
 
   ### INFO ###
 
   ### HELPERS
-  defp get_history(coin_name, %{:from => f, :until => u}) do
-    trade_history = AssignmentOne.PoloniexAPiCaller.return_trade_history(coin_name, f, u)
-    AssignmentOne.Logger.log("Request finished for coin: #{coin_name}")
+  defp handle_response(trade_history, _until)
+       when is_list(trade_history) and length(trade_history) == 1000 do
+    until =
+      trade_history
+      |> List.last()
+      |> Map.get("date")
+      |> NaiveDateTime.from_iso8601!()
+      |> DateTime.from_naive!("Etc/UTC")
+      |> DateTime.to_unix()
 
-    trade_history
+    {trade_history, until, :full}
   end
 
-  defp get_history(_, _), do: []
-
-  defp handle_history(history, %{:from => from, :until => until}, coin)
-       when is_list(history) and length(history) == 1000 do
-    AssignmentOne.Logger.log("Timeframe too big for the coin: #{coin}")
-
-    # to DateTime
-    {:ok, from} = DateTime.from_unix(from)
-    {:ok, until} = DateTime.from_unix(until)
-
-    # split timeframe and add it to time_frames
-    in_between_dates = DateTime.add(from, div(DateTime.diff(until, from), 2))
-
-    GenServer.cast(
-      self(),
-      {:add_timeframe,
-       %{:from => from |> DateTime.to_unix(), :until => in_between_dates |> DateTime.to_unix()}}
-    )
-
-    GenServer.cast(
-      self(),
-      {:add_timeframe,
-       %{:from => in_between_dates |> DateTime.to_unix(), :until => until |> DateTime.to_unix()}}
-    )
-
-    # 2 new requests need to be done
-    AssignmentOne.RateLimiter.add_request(self())
-    AssignmentOne.RateLimiter.add_request(self())
-
-    []
-  end
-
-  defp handle_history(history, _, _) do
-    history
-  end
+  defp handle_response(trade_history, until) when is_list(trade_history),
+    do: {trade_history, until, :notfull}
 end

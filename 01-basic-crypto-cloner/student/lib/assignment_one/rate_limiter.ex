@@ -4,7 +4,7 @@ defmodule AssignmentOne.RateLimiter do
 
   State:
   req_per_sec => The amount of requests that can be done in a second
-  worker_requests => A queue of pids that want to do a request.
+  request_queue => A queue of pids that want to do a request.
 
   This module will have a queue of pids that
   have asked the rate limiter if they can send a request. The
@@ -56,7 +56,7 @@ defmodule AssignmentOne.RateLimiter do
   end
 
   def handle_call(:request_queue, _from, state) do
-    {:reply, Map.get(state, :worker_requests), state}
+    {:reply, Map.get(state, :request_queue), state}
   end
 
   ### CASTS ###

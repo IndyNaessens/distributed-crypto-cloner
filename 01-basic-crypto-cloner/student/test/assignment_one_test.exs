@@ -76,23 +76,19 @@ defmodule AssignmentOneTest do
     # Test are run in random order every time so sometimes coin data isn't there yet etc
     :timer.sleep(2000)
 
-    Logger.log("\n\n\nStarting CoinDataRetriever test, this wil take ~2 mins. Why?
-    \nThis time is so long because when we split the time frame and ask the ratelimiter for permission it adds us at the end of the queue.
-    \nWhen a request comes back with 1000 trades we don't add any of it to the history we just split it and do 2 requests with a smaller timeframe.
-    \n\n\n")
+    Logger.log("\n\n\nStarting CoinDataRetriever test\n\n\n")
 
     pid =
       AssignmentOne.ProcessManager.retrieve_coin_processes()
-      |> Enum.filter(fn {coin, _pid} -> coin == "BTC_DGB" end)
+      # USDT_BTC has a lot of trades so we won't have the trade history gathered already
+      # if this test starts late
+      |> Enum.filter(fn {coin, _pid} -> coin == "USDT_BTC" end)
       |> List.first()
       |> elem(1)
 
     length_old = CoindataRetriever.get_history(pid) |> elem(1) |> length
 
-    # this time is so long because when we split the time frame and ask the ratelimiter for permission it adds us at the end of the queue
-    # queue is first in first out but the ratelimiter only knows pids so when a coin does a request and gets back 1000 results
-    # it will ask the ratelimiter for 2 new requests but has bad luck and is at the end of the queue now
-    :timer.sleep(120_000)
+    :timer.sleep(25_000)
     length_new = CoindataRetriever.get_history(pid) |> elem(1) |> length
     assert length_new > length_old
   end
