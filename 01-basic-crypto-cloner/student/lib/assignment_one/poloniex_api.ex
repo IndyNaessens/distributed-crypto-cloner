@@ -32,7 +32,7 @@ defmodule AssignmentOne.PoloniexAPiCaller do
       end_date_unix
     }"
     |> HTTPoison.get()
-    |> AssignmentOne.Logger.return_and_log("Request finished for coin: #{currency_name}")
+    |> AssignmentOne.Logger.log_and_pass("Request finished for coin: #{currency_name}")
     |> handle_response()
   end
 
@@ -45,4 +45,5 @@ defmodule AssignmentOne.PoloniexAPiCaller do
     AssignmentOne.Logger.log("Failed while handling repsonse, status: #{status_code}")
     %{}
   end
+
 end

@@ -15,8 +15,9 @@ defmodule AssignmentOne.Logger do
     GenServer.cast(__MODULE__, {:simple_log, message})
   end
 
-  def return_and_log(value, message) do
-    GenServer.call(__MODULE__, {:return_log, value, message})
+  def log_and_pass(value, message) do
+    AssignmentOne.Logger.log(message)
+    value
   end
 
   ### SERVER ###
@@ -25,10 +26,6 @@ defmodule AssignmentOne.Logger do
   end
 
   ### CALLS ###
-  def handle_call({:return_log, value, message}, _from, state) do
-    write_to_terminal(message)
-    {:reply, value, state}
-  end
 
   ### CASTS ###
   def handle_cast({:simple_log, message}, state) do
