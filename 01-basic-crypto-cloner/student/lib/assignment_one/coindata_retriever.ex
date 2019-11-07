@@ -65,7 +65,7 @@ defmodule AssignmentOne.CoindataRetriever do
 
   ### CASTS ###
   def handle_cast(:request_work_permission, state) do
-    AssignmentOne.RateLimiter.add_worker_request(self())
+    AssignmentOne.RateLimiter.add_request(self())
 
     {:noreply, state}
   end
@@ -140,8 +140,8 @@ defmodule AssignmentOne.CoindataRetriever do
     )
 
     # 2 new requests need to be done
-    AssignmentOne.RateLimiter.add_worker_request(self())
-    AssignmentOne.RateLimiter.add_worker_request(self())
+    AssignmentOne.RateLimiter.add_request(self())
+    AssignmentOne.RateLimiter.add_request(self())
 
     []
   end

@@ -4,15 +4,15 @@ defmodule AssignmentOne.RateLimiter do
 
   State:
   req_per_sec => The amount of requests that can be done in a second
-  worker_requests => A list of pids
+  worker_requests => A queue of pids that want to do a request.
 
-  This module will have a list of pids (worker_requests) that
+  This module will have a queue of pids that
   have asked the rate limiter if they can send a request. The
-  rate limiter will give each worker the permission to start
-  a request by sending the worker a message.
+  rate limiter will give each process the permission to start
+  a request by sending the process a message.
 
   This will be done while respecting the amount of requests
-  that can be send in a second. We will not go over this limit
+  that can be send in a second (req_per_sec).
   """
   use GenServer
 
@@ -22,7 +22,7 @@ defmodule AssignmentOne.RateLimiter do
   def start_link() do
     GenServer.start_link(
       __MODULE__,
-      %{:req_per_sec => @default_rate_limit, :worker_requests => []},
+      %{:req_per_sec => @default_rate_limit, :request_queue => :queue.new()},
       name: __MODULE__
     )
 
@@ -37,16 +37,12 @@ defmodule AssignmentOne.RateLimiter do
     GenServer.call(__MODULE__, :get_rate_limit)
   end
 
-  def worker_requests() do
-    GenServer.call(__MODULE__, :worker_requests)
+  def request_queue() do
+    GenServer.call(__MODULE__, :request_queue)
   end
 
-  def add_worker_request(pid) when is_pid(pid) do
-    GenServer.cast(__MODULE__, {:add_worker_request, pid})
-  end
-
-  def state() do
-    GenServer.call(__MODULE__, :state)
+  def add_request(pid) when is_pid(pid) do
+    GenServer.cast(__MODULE__, {:add_request, pid})
   end
 
   ### SERVER ###
@@ -59,38 +55,17 @@ defmodule AssignmentOne.RateLimiter do
     {:reply, Map.get(state, :req_per_sec), state}
   end
 
-  def handle_call(:worker_requests, _from, state) do
+  def handle_call(:request_queue, _from, state) do
     {:reply, Map.get(state, :worker_requests), state}
   end
 
-  def handle_call(:handle_queue, _from, state) do
-    # get queue
-    new_queue =
-      state
-      |> Map.get(:worker_requests)
-      |> List.pop_at(0)
-
-    # notify worker
-    new_queue
-    |> elem(0)
-    |> notify_worker()
-
-    # return req/sec and update state
-    {:reply, Map.get(state, :req_per_sec),
-     Map.replace!(state, :worker_requests, elem(new_queue, 1))}
-  end
-
-  def handle_call(:state, _from, state) do
-    {:reply, state, state}
-  end
-
   ### CASTS ###
-  def handle_cast({:add_worker_request, pid}, state) do
-    queue =
+  def handle_cast({:add_request, pid}, state) do
+    new_state =
       state
-      |> Map.get(:worker_requests)
+      |> Map.update!(:request_queue, &:queue.in(pid, &1))
 
-    {:noreply, Map.replace!(state, :worker_requests, Enum.concat(queue, [pid]))}
+    {:noreply, new_state}
   end
 
   def handle_cast({:change_rate_limit, limit}, state) do
@@ -99,12 +74,11 @@ defmodule AssignmentOne.RateLimiter do
 
   ### INFO ###
   def handle_info(:handle_queue, state) do
-    pid =
+    new_queue =
       state
-      |> Map.get(:worker_requests)
-      |> List.first()
-
-    notify_worker(pid)
+      |> Map.get(:request_queue)
+      |> :queue.out()
+      |> grant_permission()
 
     Process.send_after(
       __MODULE__,
@@ -112,10 +86,14 @@ defmodule AssignmentOne.RateLimiter do
       div(1000, Map.get(state, :req_per_sec, @default_rate_limit))
     )
 
-    {:noreply, Map.update!(state, :worker_requests, fn lst -> List.delete(lst, pid) end)}
+    {:noreply, Map.replace!(state, :request_queue, new_queue)}
   end
 
   ### HELPERS ###
-  defp notify_worker(pid) when is_pid(pid), do: GenServer.cast(pid, :work_permission_ok)
-  defp notify_worker(_), do: nil
+  defp grant_permission({{:value, pid}, queue}) when is_pid(pid) do
+    GenServer.cast(pid, :work_permission_ok)
+    queue
+  end
+
+  defp grant_permission({:empty, queue}), do: queue
 end
