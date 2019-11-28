@@ -1,7 +1,8 @@
-defmodule AssignmentOneTest do
+defmodule AssignmentTest do
   use ExUnit.Case
 
-  alias AssignmentOne.{Logger, ProcessManager, RateLimiter, CoindataRetriever}
+
+  alias Assignment.{Logger, ProcessManager, RateLimiter, CoindataRetriever}
 
   test "Necessary processes are alive" do
     # Test are run in random order every time so sometimes coin data isn't there yet etc
@@ -21,6 +22,9 @@ defmodule AssignmentOneTest do
 
     assert Enum.all?(procs, &is_tuple/1)
     assert Enum.all?(procs, fn {bin, pid} -> is_binary(bin) and is_pid(pid) end)
+
+    # NOTE: This can change all the time... verify this manually and adjust the value
+
     assert length(procs) > 90
   end
 
@@ -79,7 +83,7 @@ defmodule AssignmentOneTest do
     Logger.log("\n\n\nStarting CoinDataRetriever test\n\n\n")
 
     pid =
-      AssignmentOne.ProcessManager.retrieve_coin_processes()
+      Assignment.ProcessManager.retrieve_coin_processes()
       # USDT_BTC has a lot of trades so we won't have the trade history gathered already
       # if this test starts late
       |> Enum.filter(fn {coin, _pid} -> coin == "USDT_BTC" end)

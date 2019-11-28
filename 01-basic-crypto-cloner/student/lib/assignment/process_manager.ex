@@ -1,4 +1,4 @@
-defmodule AssignmentOne.ProcessManager do
+defmodule Assignment.ProcessManager do
   @moduledoc """
   A process manager that manages CoindataRetriever processes.
 
@@ -42,7 +42,7 @@ defmodule AssignmentOne.ProcessManager do
 
   ### CASTS ###
   def handle_cast({:start_coin_process, coin_name}, state) do
-    {:ok, pid} = AssignmentOne.CoindataRetriever.start(coin_name)
+    {:ok, pid} = Assignment.CoindataRetriever.start(coin_name)
     Process.monitor(pid)
 
     {:noreply, Map.put(state, pid, {coin_name, pid})}
@@ -64,7 +64,7 @@ defmodule AssignmentOne.ProcessManager do
     {coin_name, pid_gone} = Map.get(state, pid_gone)
 
     # start a new process and monitor it
-    {:ok, pid} = AssignmentOne.CoindataRetriever.start(coin_name)
+    {:ok, pid} = Assignment.CoindataRetriever.start(coin_name)
     Process.monitor(pid)
 
     # new state

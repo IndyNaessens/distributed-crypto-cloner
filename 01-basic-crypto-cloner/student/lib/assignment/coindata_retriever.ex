@@ -1,7 +1,7 @@
-defmodule AssignmentOne.CoindataRetriever do
+defmodule Assignment.CoindataRetriever do
   @moduledoc """
   The purpose of this module is to get the trade history for a specifc coin
-  using the AssignmentOne.PoloniexAPiCaller module.
+  using the Assignment.PoloniexAPiCaller module.
 
   State of this module:
   coin => The name of the coin we want the trade history from
@@ -9,7 +9,7 @@ defmodule AssignmentOne.CoindataRetriever do
   history => The trade history
 
   What will this module mostly do? After requesting work
-  permission from the AssignmentOne.RateLimiter, we start
+  permission from the Assignment.RateLimiter, we start
   retrieving the trade history.
   """
 
@@ -50,7 +50,7 @@ defmodule AssignmentOne.CoindataRetriever do
 
   ### CASTS ###
   def handle_cast(:request_work_permission, state) do
-    AssignmentOne.RateLimiter.add_request(self())
+    Assignment.RateLimiter.add_request(self())
 
     {:noreply, state}
   end
@@ -61,7 +61,7 @@ defmodule AssignmentOne.CoindataRetriever do
 
     # retrieve trade history and potential new from date
     {history, until, filled} =
-      AssignmentOne.PoloniexAPiCaller.return_trade_history(coin_name, f, u)
+      Assignment.PoloniexAPiCaller.return_trade_history(coin_name, f, u)
       |> handle_response(u)
 
     # include retrieved history and make timeframe smaller

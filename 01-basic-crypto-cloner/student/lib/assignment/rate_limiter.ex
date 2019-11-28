@@ -1,4 +1,4 @@
-defmodule AssignmentOne.RateLimiter do
+defmodule Assignment.RateLimiter do
   @moduledoc """
   A simple rate limiter that talks with CoindataRetriever processes.
 

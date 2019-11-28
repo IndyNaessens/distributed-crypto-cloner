@@ -1,4 +1,4 @@
-defmodule AssignmentOne.Logger do
+defmodule Assignment.Logger do
   @moduledoc """
   Simple logger that can log messages to the terminal.
 
@@ -16,7 +16,7 @@ defmodule AssignmentOne.Logger do
   end
 
   def log_and_pass(value, message) do
-    AssignmentOne.Logger.log(message)
+    Assignment.Logger.log(message)
     value
   end
 

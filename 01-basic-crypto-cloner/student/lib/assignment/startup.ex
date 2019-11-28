@@ -1,4 +1,4 @@
-defmodule AssignmentOne.Startup do
+defmodule Assignment.Startup do
   require IEx
 
   defstruct req_per_sec: 5
@@ -8,11 +8,11 @@ defmodule AssignmentOne.Startup do
 
   def startup(_info) do
     # Implement this module
-    AssignmentOne.Logger.start_link()
+    Assignment.Logger.start_link()
     # Implement this module
-    AssignmentOne.ProcessManager.start_link()
+    Assignment.ProcessManager.start_link()
     # Implement this module
-    AssignmentOne.RateLimiter.start_link()
+    Assignment.RateLimiter.start_link()
 
     retrieve_coin_pairs() |> start_processes()
 
@@ -20,15 +20,15 @@ defmodule AssignmentOne.Startup do
   end
 
   defp retrieve_coin_pairs() do
-    AssignmentOne.PoloniexAPiCaller.return_ticker()
+    Assignment.PoloniexAPiCaller.return_ticker()
     |> Map.keys()
   end
 
   defp start_processes(pairs) when is_list(pairs) do
     pairs
-    |> Enum.each(&AssignmentOne.ProcessManager.start_coin_process(&1))
+    |> Enum.each(&Assignment.ProcessManager.start_coin_process(&1))
 
-    AssignmentOne.ProcessManager.send_request_to_all(:request_work_permission)
+    Assignment.ProcessManager.send_request_to_all(:request_work_permission)
   end
 
   defp keep_running_until_stopped() do

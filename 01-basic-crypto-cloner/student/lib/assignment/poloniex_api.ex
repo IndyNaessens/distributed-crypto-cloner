@@ -1,4 +1,4 @@
-defmodule AssignmentOne.PoloniexAPiCaller do
+defmodule Assignment.PoloniexAPiCaller do
   @moduledoc """
   A limited implementation of the PoloniexAPiCaller.
 
@@ -16,13 +16,13 @@ defmodule AssignmentOne.PoloniexAPiCaller do
 
   def return_trade_history(currency_name, start_date_unix, end_date_unix)
       when is_binary(currency_name) do
-    AssignmentOne.Logger.log(
+    Assignment.Logger.log(
       "Requesting coin trade history: #{currency_name} -> start: #{start_date_unix} end: #{
         end_date_unix
       }"
     )
 
-    AssignmentOne.Logger.log(
+    Assignment.Logger.log(
       "Request for coin #{currency_name} is executed at #{
         DateTime.utc_now() |> DateTime.to_unix()
       }"
@@ -32,7 +32,7 @@ defmodule AssignmentOne.PoloniexAPiCaller do
       end_date_unix
     }"
     |> HTTPoison.get()
-    |> AssignmentOne.Logger.log_and_pass("Request finished for coin: #{currency_name}")
+    |> Assignment.Logger.log_and_pass("Request finished for coin: #{currency_name}")
     |> handle_response()
   end
 
@@ -42,7 +42,7 @@ defmodule AssignmentOne.PoloniexAPiCaller do
   end
 
   defp handle_response({_, %{status_code: status_code, body: _}}) do
-    AssignmentOne.Logger.log("Failed while handling repsonse, status: #{status_code}")
+    Assignment.Logger.log("Failed while handling repsonse, status: #{status_code}")
     %{}
   end
 
