@@ -17,12 +17,14 @@ defmodule Assignment.PoloniexAPiCaller do
   def return_trade_history(currency_name, start_date_unix, end_date_unix)
       when is_binary(currency_name) do
     Assignment.Logger.log(
+      :info,
       "Requesting coin trade history: #{currency_name} -> start: #{start_date_unix} end: #{
         end_date_unix
       }"
     )
 
     Assignment.Logger.log(
+      :info,
       "Request for coin #{currency_name} is executed at #{
         DateTime.utc_now() |> DateTime.to_unix()
       }"
@@ -32,7 +34,7 @@ defmodule Assignment.PoloniexAPiCaller do
       end_date_unix
     }"
     |> HTTPoison.get()
-    |> Assignment.Logger.log_and_pass("Request finished for coin: #{currency_name}")
+    |> Assignment.Logger.log_and_pass(:info, "Request finished for coin: #{currency_name}")
     |> handle_response()
   end
 
@@ -41,9 +43,8 @@ defmodule Assignment.PoloniexAPiCaller do
     Poison.Parser.parse!(body, %{})
   end
 
-  defp handle_response({_, %{status_code: status_code, body: _}}) do
-    Assignment.Logger.log("Failed while handling repsonse, status: #{status_code}")
+  defp handle_response({:error, %{id: _id, reason: msg}}) do
+    Assignment.Logger.log(:error, "Failed while handling repsonse, status: #{msg}")
     %{}
   end
-
 end
