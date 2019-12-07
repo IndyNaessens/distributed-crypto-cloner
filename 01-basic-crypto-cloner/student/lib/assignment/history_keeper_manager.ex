@@ -7,6 +7,7 @@ defmodule Assignment.HistoryKeeperManager do
   end
 
   def get_pid_for(coin_name) when is_binary(coin_name) do
+    GenServer.call(__MODULE__, {:get_pid_for_coin, coin_name})
   end
 
   def retrieve_history_processes() do
@@ -30,10 +31,17 @@ defmodule Assignment.HistoryKeeperManager do
     {:noreply, updated_state}
   end
 
-  # CASTS
-
   # CALLS
   def handle_call(:history, _from, state) do
     {:reply, state, state}
   end
+
+  def handle_call({:get_pid_for_coin, coin_name}, _from, state) do
+    pid = state
+    |> Enum.find(fn {current_coin_name, _pid} -> current_coin_name == coin_name end)
+    |> elem(1)
+
+    {:reply, pid, state}
+  end
+
 end

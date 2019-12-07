@@ -12,40 +12,25 @@ defmodule Assignment.CoindataRetriever do
   permission from the Assignment.RateLimiter, we start
   retrieving the trade history.
   """
-
   use GenServer
-
-  @from (DateTime.utc_now() |> DateTime.to_unix()) - 60 * 60 * 24 * 1
-  @until DateTime.utc_now() |> DateTime.to_unix()
-
-  @default_time_frame %{:from => @from, :until => @until}
 
   ### API
   def start_link(coin_name) when is_binary(coin_name) do
-    GenServer.start(__MODULE__, %{
-      :coin => coin_name,
-      :time_frame => @default_time_frame,
-      :history => []
-    })
+    GenServer.start(__MODULE__, coin_name)
   end
 
-  def get_history(pid) when is_pid(pid) do
-    GenServer.call(pid, :coin_history)
+  def get_coin_name(pid) when is_pid(pid) do
+    GenServer.call(pid, :get_coin_name)
   end
 
   ### SERVER
-  def init(state) do
-    {:ok, state}
+  def init(coin_name) do
+    {:ok, coin_name}
   end
 
   ### CALLS ###
-  def handle_call(:coin_history, _from, state) do
-    coin_hist = {
-      Map.get(state, :coin),
-      Map.get(state, :history)
-    }
-
-    {:reply, coin_hist, state}
+  def handle_call(:get_coin_name, _from, coin_name) do
+    {:reply, coin_name, coin_name}
   end
 
   ### CASTS ###
