@@ -23,7 +23,7 @@ defmodule Assignment.HistoryKeeperManager do
     updated_state =
       Assignment.ProcessManager.retrieve_coin_processes()
       |> Enum.map(fn {coin_name, _pid} ->
-        {:ok, pid} = Assignment.HistoryKeeperSupervisor.add_worker(coin_name)
+        {:ok, pid} = Assignment.HistoryKeeperWorkerSupervisor.add_worker(coin_name)
         {coin_name, pid}
       end)
 

@@ -7,7 +7,7 @@ defmodule Assignment.Application do
       Assignment.RateLimiter,
       Assignment.CoindataRetrieverSupervisor,
       Assignment.ProcessManager,
-      Assignment.HistoryKeeperSupervisor,
+      Assignment.HistoryKeeperWorkerSupervisor,
       Assignment.HistoryKeeperManager
     ]
 

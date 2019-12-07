@@ -1,4 +1,4 @@
-defmodule Assignment.HistoryKeeperSupervisor do
+defmodule Assignment.HistoryKeeperWorkerSupervisor do
   use DynamicSupervisor
 
   # API
