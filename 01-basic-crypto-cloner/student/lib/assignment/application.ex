@@ -5,27 +5,8 @@ defmodule Assignment.Application do
     children = [
       Assignment.Logger,
       Assignment.RateLimiter,
-      Assignment.HistoryKeeperWorkerSupervisor,
-      Assignment.CoindataRetrieverSupervisor,
-      {Task,
-       fn ->
-         currency_pairs = Assignment.PoloniexAPiCaller.return_ticker()
-
-         task_one =
-           Task.async(fn ->
-             Assignment.ProcessManager.start_coin_data_retrievers(currency_pairs)
-           end)
-
-         task_two =
-           Task.async(fn ->
-             Assignment.HistoryKeeperManager.start_history_keepers(currency_pairs)
-           end)
-
-         Task.await(task_one)
-         Task.await(task_two)
-
-         Assignment.ProcessManager.start_work()
-       end}
+      Assignment.CoindataSupervisor,
+      Assignment.HistoryKeeperSupervisor
     ]
 
     opts = [strategy: :one_for_one, name: Assignment.Supervisor]

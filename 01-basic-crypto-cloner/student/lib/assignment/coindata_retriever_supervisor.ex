@@ -12,6 +12,7 @@ defmodule Assignment.CoindataRetrieverSupervisor do
   end
 
   # SERVER
+  @impl true
   def init(:no_args) do
     DynamicSupervisor.init(strategy: :one_for_one)
   end

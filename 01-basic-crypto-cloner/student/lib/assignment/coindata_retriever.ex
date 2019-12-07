@@ -16,7 +16,7 @@ defmodule Assignment.CoindataRetriever do
 
   ### API
   def start_link(coin_name) when is_binary(coin_name) do
-    GenServer.start(__MODULE__, coin_name)
+    GenServer.start_link(__MODULE__, coin_name)
   end
 
   def get_coin_name(pid) when is_pid(pid) do

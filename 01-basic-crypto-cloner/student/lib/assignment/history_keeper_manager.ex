@@ -1,22 +1,57 @@
 defmodule Assignment.HistoryKeeperManager do
+  use GenServer
 
   # API
+  def start_link(_) do
+    GenServer.start_link(__MODULE__, nil, name: __MODULE__)
+  end
+
   def get_pid_for(coin_name) when is_binary(coin_name) do
-    retrieve_history_processes()
-    |> Enum.find(fn {current_coin_name, _pid} -> current_coin_name == coin_name end)
-    |> elem(1)
+    GenServer.call(__MODULE__, {:get_pid_for_coin, coin_name})
   end
 
   def retrieve_history_processes() do
-    DynamicSupervisor.which_children(Assignment.HistoryKeeperWorkerSupervisor)
-    |> Enum.map(fn {_, pid, _, _} ->
-      {Assignment.HistoryKeeperWorker.get_pair_info(pid), pid}
-    end)
+    GenServer.call(__MODULE__, :retrieve_history_processes)
   end
 
-  def start_history_keepers(currency_pairs) do
-    currency_pairs
-    |> Enum.map(&elem(&1, 0))
-    |> Enum.each(&Assignment.HistoryKeeperWorkerSupervisor.add_worker(&1))
+  # SERVER
+  def init(_) do
+    {:ok, nil, {:continue, :start_history_keeper_workers}}
+  end
+
+  def handle_continue(:start_history_keeper_workers, state) do
+    if length(DynamicSupervisor.which_children(Assignment.HistoryKeeperWorkerSupervisor)) == 0 do
+      Assignment.ProcessManager.retrieve_coin_processes()
+      |> Enum.map(&elem(&1, 0))
+      |> Enum.each(&Assignment.HistoryKeeperWorkerSupervisor.add_worker(&1))
+
+      # work is started
+      Assignment.ProcessManager.start_work()
+    end
+
+    {:noreply, state}
+  end
+
+  # CALLS
+  def handle_call({:get_pid_for_coin, coin_name}, _from, state) do
+    pid =
+      DynamicSupervisor.which_children(Assignment.HistoryKeeperWorkerSupervisor)
+      |> Enum.map(fn {_, pid, _, _} ->
+        {Assignment.HistoryKeeperWorker.get_pair_info(pid), pid}
+      end)
+      |> Enum.find(fn {current_coin_name, _pid} -> current_coin_name == coin_name end)
+      |> elem(1)
+
+    {:reply, pid, state}
+  end
+
+  def handle_call(:retrieve_history_processes, _from, state) do
+    history_pairs =
+      DynamicSupervisor.which_children(Assignment.HistoryKeeperWorkerSupervisor)
+      |> Enum.map(fn {_, pid, _, _} ->
+        {Assignment.HistoryKeeperWorker.get_pair_info(pid), pid}
+      end)
+
+    {:reply, history_pairs, state}
   end
 end
