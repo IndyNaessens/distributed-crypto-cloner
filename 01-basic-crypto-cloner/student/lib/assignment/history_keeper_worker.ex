@@ -1,17 +1,15 @@
 defmodule Assignment.HistoryKeeperWorker do
   use Agent
 
-  @from (DateTime.utc_now() |> DateTime.to_unix()) - 60 * 60 * 24 * 1
-  @until DateTime.utc_now() |> DateTime.to_unix()
-
-  @default_time_frame %{:from => @from, :until => @until}
-
   # API
   def start_link(coin_name) do
     Agent.start_link(fn ->
       %{
         :coin => coin_name,
-        :time_frame => @default_time_frame,
+        :time_frame => %{
+          :from => Application.fetch_env!(:assignment, :from),
+          :until => Application.fetch_env!(:assignment, :until)
+        },
         :history => []
       }
     end)

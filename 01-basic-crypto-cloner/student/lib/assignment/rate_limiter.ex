@@ -16,13 +16,11 @@ defmodule Assignment.RateLimiter do
   """
   use GenServer
 
-  @default_rate_limit 5
-
   ### API ###
   def start_link(_) do
     GenServer.start_link(
       __MODULE__,
-      %{:req_per_sec => @default_rate_limit, :request_queue => :queue.new()},
+      nil,
       name: __MODULE__
     )
   end
@@ -44,12 +42,13 @@ defmodule Assignment.RateLimiter do
   end
 
   ### SERVER ###
-  def init(state) do
-    {:ok, state, {:continue, :start_queue_handling}}
+  def init(_) do
+    {:ok, nil, {:continue, :start_queue_handling}}
   end
 
-  def handle_continue(:start_queue_handling, state) do
+  def handle_continue(:start_queue_handling, _state) do
     send(__MODULE__, :handle_queue)
+    state = %{:req_per_sec => Application.fetch_env!(:assignment, :rate), :request_queue => :queue.new()}
 
     {:noreply, state}
   end
@@ -87,7 +86,7 @@ defmodule Assignment.RateLimiter do
     Process.send_after(
       __MODULE__,
       :handle_queue,
-      div(1000, Map.get(state, :req_per_sec, @default_rate_limit))
+      div(1000, Map.get(state, :req_per_sec, 5))
     )
 
     {:noreply, Map.replace!(state, :request_queue, new_queue)}
