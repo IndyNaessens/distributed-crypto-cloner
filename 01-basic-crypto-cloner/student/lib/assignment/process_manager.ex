@@ -40,7 +40,7 @@ defmodule Assignment.ProcessManager do
         {coin_name, pid}
       end)
 
-    # send_request_to_all(:request_work_permission)
+    send_request_to_all(:request_work_permission)
     {:noreply, updated_state}
   end
 

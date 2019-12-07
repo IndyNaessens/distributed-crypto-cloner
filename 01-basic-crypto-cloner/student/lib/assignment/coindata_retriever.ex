@@ -34,50 +34,53 @@ defmodule Assignment.CoindataRetriever do
   end
 
   ### CASTS ###
-  def handle_cast(:request_work_permission, state) do
+  def handle_cast(:request_work_permission, coin_name) do
     Assignment.RateLimiter.add_request(self())
 
-    {:noreply, state}
+    {:noreply, coin_name}
   end
 
-  def handle_cast(:work_permission_ok, state) do
+  def handle_cast(:work_permission_ok, coin_name) do
     # needed for work
-    {coin_name, %{:from => f, :until => u}} = {Map.get(state, :coin), Map.get(state, :time_frame)}
+    history_keeper_pid = Assignment.HistoryKeeperManager.get_pid_for(coin_name)
+
+    %{:from => f, :until => u} =
+      Assignment.HistoryKeeperWorker.request_timeframe(history_keeper_pid)
 
     # retrieve trade history and potential new from date
     {history, until, filled} =
       Assignment.PoloniexAPiCaller.return_trade_history(coin_name, f, u)
-      |> handle_response(u)
+      |> handle_response()
 
-    # include retrieved history and make timeframe smaller
-    new_state =
-      state
-      |> Map.replace!(:time_frame, %{:from => f, :until => until})
-      |> Map.update!(:history, fn current_history ->
-        [history | current_history] |> List.flatten()
-      end)
+    # include retrieved history and update timeframe
+    Assignment.HistoryKeeperWorker.update_timeframe(history_keeper_pid, %{
+      :from => f,
+      :until => until
+    })
+
+    Assignment.HistoryKeeperWorker.append_to_history(history_keeper_pid, history)
 
     # we don't have the whole tradehistory so ask for a new request
     if filled == :full, do: GenServer.cast(self(), :request_work_permission)
-    {:noreply, new_state}
+    {:noreply, coin_name}
   end
-
-  ### INFO ###
 
   ### HELPERS
-  defp handle_response(trade_history, _until)
+  defp handle_response(trade_history)
        when is_list(trade_history) and length(trade_history) == 1000 do
-    until =
-      trade_history
-      |> List.last()
-      |> Map.get("date")
-      |> NaiveDateTime.from_iso8601!()
-      |> DateTime.from_naive!("Etc/UTC")
-      |> DateTime.to_unix()
-
-    {trade_history, until, :full}
+    {trade_history, get_last_date_in_trade_history(trade_history), :full}
   end
 
-  defp handle_response(trade_history, until) when is_list(trade_history),
-    do: {trade_history, until, :notfull}
+  defp handle_response(trade_history) when is_list(trade_history) do
+    {trade_history, get_last_date_in_trade_history(trade_history), :notfull}
+  end
+
+  defp get_last_date_in_trade_history(trade_history) do
+    trade_history
+    |> List.last()
+    |> Map.get("date")
+    |> NaiveDateTime.from_iso8601!()
+    |> DateTime.from_naive!("Etc/UTC")
+    |> DateTime.to_unix()
+  end
 end
