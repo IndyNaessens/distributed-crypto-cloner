@@ -77,8 +77,6 @@ Following module names will be used:
   * `Assignment.HistoryKeeperManager.get_pid_for/1` returns the pid of the process that is keeping the history for that currency pair.
   * `Assignment.HistoryKeeperManager.retrieve_history_processes/0` returns a list of tuples. The first element of the tuple is a string (the currency pair) whereas the second element is the PID of the associated process.
 
-
-
 * **_indicative_** tests -> check the file `assignment_two_test.exs`.
 
 ## Additional constraints
