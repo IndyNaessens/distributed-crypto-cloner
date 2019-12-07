@@ -41,13 +41,13 @@ defmodule Assignment.CoindataRetriever do
   end
 
   def handle_cast(:work_permission_ok, coin_name) do
-    # needed for work
+    # needed for work (pid, timeframe)
     history_keeper_pid = Assignment.HistoryKeeperManager.get_pid_for(coin_name)
 
     %{:from => f, :until => u} =
       Assignment.HistoryKeeperWorker.request_timeframe(history_keeper_pid)
 
-    # retrieve trade history and potential new from date
+    # retrieve trade history, new until date and if the respone was full (1000 elems)
     {history, until, filled} =
       Assignment.PoloniexAPiCaller.return_trade_history(coin_name, f, u)
       |> handle_response()
@@ -60,7 +60,7 @@ defmodule Assignment.CoindataRetriever do
 
     Assignment.HistoryKeeperWorker.append_to_history(history_keeper_pid, history)
 
-    # we don't have the whole tradehistory so ask for a new request
+    # if we don't have the whole tradehistory (response -> 1000 elems) ask for a new request
     if filled == :full, do: GenServer.cast(self(), :request_work_permission)
     {:noreply, coin_name}
   end
