@@ -19,14 +19,12 @@ defmodule Assignment.RateLimiter do
   @default_rate_limit 5
 
   ### API ###
-  def start_link() do
+  def start_link(_) do
     GenServer.start_link(
       __MODULE__,
       %{:req_per_sec => @default_rate_limit, :request_queue => :queue.new()},
       name: __MODULE__
     )
-
-    send(__MODULE__, :handle_queue)
   end
 
   def change_rate_limit(limit) when is_integer(limit) do
@@ -47,7 +45,13 @@ defmodule Assignment.RateLimiter do
 
   ### SERVER ###
   def init(state) do
-    {:ok, state}
+    {:ok, state, {:continue, :start_queue_handling}}
+  end
+
+  def handle_continue(:start_queue_handling, state) do
+    send(__MODULE__, :handle_queue)
+
+    {:noreply, state}
   end
 
   ### CALLS ###

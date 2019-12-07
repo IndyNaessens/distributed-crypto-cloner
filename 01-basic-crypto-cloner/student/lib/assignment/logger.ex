@@ -7,8 +7,8 @@ defmodule Assignment.Logger do
   use GenServer
 
   ### API ###
-  def start_link() do
-    GenServer.start_link(__MODULE__, [], name: __MODULE__)
+  def start_link(_) do
+    GenServer.start_link(__MODULE__, :no_args, name: __MODULE__)
   end
 
   def log(level, message) do
@@ -21,8 +21,8 @@ defmodule Assignment.Logger do
   end
 
   ### SERVER ###
-  def init(state) do
-    {:ok, state}
+  def init(:no_args) do
+    {:ok, nil}
   end
 
   ### CALLS ###

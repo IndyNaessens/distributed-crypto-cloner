@@ -3,11 +3,12 @@ defmodule Assignment.Application do
 
   def start(_type, _args) do
     children = [
-      # Do not change this file!
-      %{
-        id: Assignment.Startup,
-        start: {Assignment.Startup, :start_link, []}
-      }
+      Assignment.Logger,
+      Assignment.RateLimiter,
+      Assignment.CoindataRetrieverSupervisor,
+      Assignment.ProcessManager,
+      Assignment.HistoryKeeperSupervisor,
+      Assignment.HistoryKeeperManager
     ]
 
     opts = [strategy: :one_for_one, name: Assignment.Supervisor]

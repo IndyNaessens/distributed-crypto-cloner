@@ -15,13 +15,13 @@ defmodule Assignment.CoindataRetriever do
 
   use GenServer
 
-  @from (DateTime.utc_now() |> DateTime.to_unix()) - 60 * 60 * 24 * 7
+  @from (DateTime.utc_now() |> DateTime.to_unix()) - 60 * 60 * 24 * 1
   @until DateTime.utc_now() |> DateTime.to_unix()
 
   @default_time_frame %{:from => @from, :until => @until}
 
   ### API
-  def start(coin_name) when is_binary(coin_name) do
+  def start_link(coin_name) when is_binary(coin_name) do
     GenServer.start(__MODULE__, %{
       :coin => coin_name,
       :time_frame => @default_time_frame,

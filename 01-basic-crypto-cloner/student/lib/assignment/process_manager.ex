@@ -14,16 +14,12 @@ defmodule Assignment.ProcessManager do
   use GenServer
 
   ### API ###
-  def start_link() do
-    GenServer.start_link(__MODULE__, %{}, name: __MODULE__)
+  def start_link(_) do
+    GenServer.start_link(__MODULE__, :no_args, name: __MODULE__)
   end
 
   def retrieve_coin_processes() do
     GenServer.call(__MODULE__, :retrieve_coin_processes)
-  end
-
-  def start_coin_process(coin_name) when is_binary(coin_name) do
-    GenServer.cast(__MODULE__, {:start_coin_process, coin_name})
   end
 
   def send_request_to_all(request) do
@@ -31,26 +27,31 @@ defmodule Assignment.ProcessManager do
   end
 
   ### SERVER ###
-  def init(state) do
-    {:ok, state}
+  def init(:no_args) do
+    {:ok, :no_args, {:continue, :start_processes}}
+  end
+
+  def handle_continue(:start_processes, _state) do
+    updated_state =
+      Assignment.PoloniexAPiCaller.return_ticker()
+      |> Map.keys()
+      |> Enum.map(fn coin_name ->
+        {:ok, pid} = Assignment.CoindataRetrieverSupervisor.add_worker(coin_name)
+        {coin_name, pid}
+      end)
+
+    # send_request_to_all(:request_work_permission)
+    {:noreply, updated_state}
   end
 
   ### CALLS ###
   def handle_call(:retrieve_coin_processes, _from, state) do
-    {:reply, Map.values(state), state}
+    {:reply, state, state}
   end
 
   ### CASTS ###
-  def handle_cast({:start_coin_process, coin_name}, state) do
-    {:ok, pid} = Assignment.CoindataRetriever.start(coin_name)
-    Process.monitor(pid)
-
-    {:noreply, Map.put(state, pid, {coin_name, pid})}
-  end
-
   def handle_cast({:send_request_to_all, request}, state) do
     state
-    |> Map.values()
     |> Enum.each(fn {_, pid} ->
       GenServer.cast(pid, request)
     end)
@@ -59,21 +60,4 @@ defmodule Assignment.ProcessManager do
   end
 
   ### INFO ###
-  def handle_info({:DOWN, _ref, :process, pid_gone, _reason}, state) do
-    # get pair for pid_gone
-    {coin_name, pid_gone} = Map.get(state, pid_gone)
-
-    # start a new process and monitor it
-    {:ok, pid} = Assignment.CoindataRetriever.start(coin_name)
-    Process.monitor(pid)
-
-    # new state
-    new_state =
-      state
-      |> Map.delete(pid_gone)
-      |> Map.put(pid, {coin_name, pid})
-
-    # new state needs the new pair
-    {:noreply, new_state}
-  end
 end
