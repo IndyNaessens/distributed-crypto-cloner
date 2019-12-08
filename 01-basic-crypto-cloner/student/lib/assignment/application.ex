@@ -4,9 +4,9 @@ defmodule Assignment.Application do
   def start(_type, _args) do
     children = [
       Assignment.Logger,
-      Assignment.RateLimiter,
       Assignment.CoindataSupervisor,
-      Assignment.HistoryKeeperSupervisor
+      Assignment.HistoryKeeperSupervisor,
+      Assignment.RateLimiter
     ]
 
     opts = [strategy: :one_for_one, name: Assignment.Supervisor]

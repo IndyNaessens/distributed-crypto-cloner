@@ -44,9 +44,6 @@ defmodule Assignment.HistoryKeeperManager do
       Assignment.ProcessManager.retrieve_coin_processes()
       |> Enum.map(&elem(&1, 0))
       |> Enum.each(&Assignment.HistoryKeeperWorkerSupervisor.add_worker(&1))
-
-      # work is started
-      Assignment.ProcessManager.start_work()
     end
 
     {:noreply, state}
@@ -59,7 +56,9 @@ defmodule Assignment.HistoryKeeperManager do
       |> Enum.map(fn {_, pid, _, _} ->
         {Assignment.HistoryKeeperWorker.get_pair_info(pid), pid}
       end)
-      |> Enum.find(fn {current_coin_name, _pid} -> current_coin_name == coin_name end)
+      |> Enum.find({coin_name, nil}, fn {current_coin_name, _pid} ->
+        current_coin_name == coin_name
+      end)
       |> elem(1)
 
     {:reply, pid, state}

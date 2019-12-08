@@ -44,6 +44,7 @@ defmodule Assignment.RateLimiter do
       :request_queue => :queue.new()
     }
 
+    Assignment.ProcessManager.start_work() # workers can start
     {:noreply, state}
   end
 
