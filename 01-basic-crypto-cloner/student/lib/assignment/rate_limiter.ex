@@ -1,18 +1,12 @@
 defmodule Assignment.RateLimiter do
   @moduledoc """
-  A simple rate limiter that talks with CoindataRetriever processes.
+  This is the RateLimiter module
 
-  State:
-  req_per_sec => The amount of requests that can be done in a second
-  request_queue => A queue of pids that want to do a request.
+  It keeps a queue of worker pids that want to do an http request
+  This module is responsible for allowing workers to make that http request
+  without violating the rate_limit that is specified in the config.exs
 
-  This module will have a queue of pids that
-  have asked the rate limiter if they can send a request. The
-  rate limiter will give each process the permission to start
-  a request by sending the process a message.
-
-  This will be done while respecting the amount of requests
-  that can be send in a second (req_per_sec).
+  The queue is a fifo queue.
   """
   use GenServer
 

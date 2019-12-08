@@ -1,8 +1,13 @@
 defmodule Assignment.Logger do
   @moduledoc """
-  Simple logger that can log messages to the terminal.
+  This is the Logger module
 
-  We don't keep any state.
+  It can log messages to the terminal
+  We can use the following log levels:
+  - debug
+  - info
+  - warning (warn)
+  - error
   """
   use GenServer
 

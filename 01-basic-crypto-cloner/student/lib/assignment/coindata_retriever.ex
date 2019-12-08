@@ -1,16 +1,8 @@
 defmodule Assignment.CoindataRetriever do
   @moduledoc """
-  The purpose of this module is to get the trade history for a specifc coin
-  using the Assignment.PoloniexAPiCaller module.
+  This is the CoindataRetriever module
 
-  State of this module:
-  coin => The name of the coin we want the trade history from
-  time_frame => We want the trade history between 2 specific dates
-  history => The trade history
-
-  What will this module mostly do? After requesting work
-  permission from the Assignment.RateLimiter, we start
-  retrieving the trade history.
+  The purpose of this module is to get the trade history for a specifc coin and timeframe
   """
   use GenServer
 

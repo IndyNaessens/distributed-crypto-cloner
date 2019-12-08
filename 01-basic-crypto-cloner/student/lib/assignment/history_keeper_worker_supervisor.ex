@@ -1,4 +1,10 @@
 defmodule Assignment.HistoryKeeperWorkerSupervisor do
+  @moduledoc """
+  This is the HistoryKeeperWorkerSupervisor module
+
+  It's a DynamicSupervisor that supervises n-amount HistoryKeeperWorkers
+  It uses a one_for_one strategy
+  """
   use DynamicSupervisor
 
   # API

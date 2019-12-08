@@ -1,15 +1,10 @@
 defmodule Assignment.ProcessManager do
   @moduledoc """
-  A process manager that manages CoindataRetriever processes.
+  This is the ProcessManager module
 
-  State:
-  We keep a Map of all started CoindataRetriever processes.
-
-  The key represents the pid
-  And the value consist of the coin_name and the pid as a tuple
-
-  When processes exit for any reason we will simply start
-  a new CoindataRetriever process that wil handle the same coin.
+  It starts CoindataRetrievers using a DynamicSupervisor
+  After they are started we can call this module instead of the DynamicSupervisor
+  for data
   """
   use GenServer
 

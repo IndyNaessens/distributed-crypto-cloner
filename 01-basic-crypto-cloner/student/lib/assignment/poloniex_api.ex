@@ -1,6 +1,8 @@
 defmodule Assignment.PoloniexAPiCaller do
   @moduledoc """
-  A limited implementation of the PoloniexAPiCaller.
+  This is the PoloniexAPiCaller module
+
+  It is a very limited implementation of the PoloniexAPiCaller.
 
   Info => https://docs.poloniex.com
   """

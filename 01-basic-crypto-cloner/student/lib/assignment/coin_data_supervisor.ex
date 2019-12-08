@@ -1,4 +1,11 @@
 defmodule Assignment.CoindataSupervisor do
+  @moduledoc """
+  This is the CoindataSupervisor module.
+
+  It supervises the following modules with a rest_for_one strategy
+   - CoindataRetrieverSupervisor
+   - ProcessManager
+  """
   use Supervisor
 
   def start_link([]) do

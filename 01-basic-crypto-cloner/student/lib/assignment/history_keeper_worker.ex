@@ -1,4 +1,12 @@
 defmodule Assignment.HistoryKeeperWorker do
+  @moduledoc """
+  This is the HistoryKeeperWorker module
+
+  It uses an Agent to hold/update the following state
+  - coin_name (string/binary)
+  - time_frame (time frame of the history)
+  - history (trade history for the specified coin_name)
+  """
   use Agent
 
   # API

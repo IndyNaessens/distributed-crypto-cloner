@@ -1,4 +1,11 @@
 defmodule Assignment.HistoryKeeperManager do
+  @moduledoc """
+  This is the HistoryKeeperManager module
+
+  It starts HistoryKeeperWorkers using a DynamicSupervisor
+  After they are started we can call this module instead of the DynamicSupervisor
+  for data
+  """
   use GenServer
 
   # API

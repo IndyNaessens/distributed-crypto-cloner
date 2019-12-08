@@ -1,4 +1,10 @@
 defmodule Assignment.CoindataRetrieverSupervisor do
+  @moduledoc """
+  This is the CoindataRetrieverSupervisor module
+
+  It's a DynamicSupervisor that supervises n-amount CoindataRetrievers
+  It uses a one_for_one strategy
+  """
   use DynamicSupervisor
 
   # API
