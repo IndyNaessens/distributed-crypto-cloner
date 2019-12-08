@@ -14,7 +14,20 @@ defmodule Assignment.HistoryKeeperManager do
   end
 
   def get_pid_for(coin_name) when is_binary(coin_name) do
-    GenServer.call(__MODULE__, {:get_pid_for_coin, coin_name})
+    pid = GenServer.call(__MODULE__, {:get_pid_for_coin, coin_name})
+
+    case pid do
+      # it is possible that the coin_data_retriever_supervisor crashes
+      # and that a new coin is introduced from poloniex after restarting
+      # and that the worker for it starts requesting work but doesn't have a history keeper
+      # because the coin was later introduced so we make one available for it
+      nil ->
+        Assignment.HistoryKeeperWorkerSupervisor.add_worker(coin_name)
+        GenServer.call(__MODULE__, {:get_pid_for_coin, coin_name})
+
+      pid ->
+        pid
+    end
   end
 
   def retrieve_history_processes() do

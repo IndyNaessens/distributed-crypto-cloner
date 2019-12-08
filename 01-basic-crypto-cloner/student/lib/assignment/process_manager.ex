@@ -30,6 +30,7 @@ defmodule Assignment.ProcessManager do
     if length(DynamicSupervisor.which_children(Assignment.CoindataRetrieverSupervisor)) == 0 do
       Assignment.PoloniexAPiCaller.return_ticker()
       |> Map.keys()
+      #|> Enum.take(3)
       |> Enum.each(&Assignment.CoindataRetrieverSupervisor.add_worker(&1))
     end
 
