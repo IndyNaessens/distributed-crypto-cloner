@@ -58,7 +58,7 @@ defmodule Assignment.HistoryKeeperWorker do
     amount_of_days = Float.ceil((until - from) / 86400)
 
     cond do
-      amount_of_days >= 30 -> {:part, %{:from => until - 60 * 60 * 24 * 30, :until => until}}
+      amount_of_days > 30 -> {:part, %{:from => until - 60 * 60 * 24 * 30, :until => until}}
       true -> {:complete, %{:from => from, :until => until}}
     end
   end

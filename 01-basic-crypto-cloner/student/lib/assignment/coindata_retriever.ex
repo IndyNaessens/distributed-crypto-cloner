@@ -39,16 +39,16 @@ defmodule Assignment.CoindataRetriever do
     {time_frame_complete, %{:from => f, :until => u}} =
       Assignment.HistoryKeeperWorker.request_timeframe_for_api_call(history_keeper_pid)
 
-    # retrieve trade history, new until date and if the respone was full (1000 elems)
+    # retrieve trade history, new until date and if we need to ask for a new request at the end
     {history, until, continue} =
       Assignment.PoloniexAPiCaller.return_trade_history(coin_name, f, u)
-      |> handle_response({f,u})
+      |> handle_response({f, u})
 
     # include retrieved history and update timeframe
     Assignment.HistoryKeeperWorker.append_to_history(history_keeper_pid, history)
     Assignment.HistoryKeeperWorker.update_timeframe_until(history_keeper_pid, until)
 
-    # continue/retry when we don't have the whole tradehistory/when the api gave an error
+    # continue/retry when we don't have the whole tradehistory
     if continue == :yes or time_frame_complete == :part,
       do: GenServer.cast(self(), :request_work_permission)
 
@@ -65,7 +65,7 @@ defmodule Assignment.CoindataRetriever do
     {trade_history, from, :no}
   end
 
-  defp handle_response(:poloniex_api_error, {_from,until}) do
+  defp handle_response(:poloniex_api_error, {_from, until}) do
     {[], until, :yes}
   end
 
