@@ -2,8 +2,8 @@ defmodule Assignment.CoindataRetrieverSupervisor do
   use DynamicSupervisor
 
   # API
-  def start_link(_) do
-    DynamicSupervisor.start_link(__MODULE__, :no_args, name: __MODULE__)
+  def start_link([]) do
+    DynamicSupervisor.start_link(__MODULE__, [], name: __MODULE__)
   end
 
   def add_worker(coin_name) do
@@ -12,8 +12,7 @@ defmodule Assignment.CoindataRetrieverSupervisor do
   end
 
   # SERVER
-  @impl true
-  def init(:no_args) do
+  def init([]) do
     DynamicSupervisor.init(strategy: :one_for_one)
   end
 end

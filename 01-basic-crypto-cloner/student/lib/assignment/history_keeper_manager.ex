@@ -2,8 +2,8 @@ defmodule Assignment.HistoryKeeperManager do
   use GenServer
 
   # API
-  def start_link(_) do
-    GenServer.start_link(__MODULE__, nil, name: __MODULE__)
+  def start_link([]) do
+    GenServer.start_link(__MODULE__, [], name: __MODULE__)
   end
 
   def get_pid_for(coin_name) when is_binary(coin_name) do
@@ -15,8 +15,8 @@ defmodule Assignment.HistoryKeeperManager do
   end
 
   # SERVER
-  def init(_) do
-    {:ok, nil, {:continue, :start_history_keeper_workers}}
+  def init([]) do
+    {:ok, [], {:continue, :start_history_keeper_workers}}
   end
 
   def handle_continue(:start_history_keeper_workers, state) do

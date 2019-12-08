@@ -38,7 +38,7 @@ defmodule Assignment.HistoryKeeperWorker do
     end)
   end
 
-  def append_to_history(pid, new_history) do
+  def append_to_history(pid, new_history) when is_pid(pid) and is_list(new_history) do
     Agent.update(pid, fn state ->
       Map.update!(state, :history, fn current_history ->
         [new_history | current_history] |> List.flatten()

@@ -14,8 +14,8 @@ defmodule Assignment.ProcessManager do
   use GenServer
 
   ### API ###
-  def start_link(_) do
-    GenServer.start_link(__MODULE__, nil, name: __MODULE__)
+  def start_link([]) do
+    GenServer.start_link(__MODULE__, [], name: __MODULE__)
   end
 
   def retrieve_coin_processes() do
@@ -27,8 +27,8 @@ defmodule Assignment.ProcessManager do
   end
 
   # SERVER
-  def init(_) do
-    {:ok, nil, {:continue, :start_coin_data_workers}}
+  def init([]) do
+    {:ok, [], {:continue, :start_coin_data_workers}}
   end
 
   def handle_continue(:start_coin_data_workers, state) do
