@@ -40,16 +40,43 @@ defmodule Assignment.HistoryKeeperWorker do
     Agent.get(pid, fn state -> Map.get(state, :time_frame) end)
   end
 
+  @doc """
+  Method that gives a time frame that is valid for the Poloniex api
+  """
+  def request_timeframe_for_api_call(pid) when is_pid(pid) do
+    Agent.get(pid, fn state ->
+      Map.get(state, :time_frame)
+      |> transform_time_frame()
+    end)
+  end
+
+  defp transform_time_frame(%{:from => from, :until => until}) do
+    amount_of_days = Float.ceil((until - from) / 86400)
+
+    cond do
+      amount_of_days >= 30 -> {:part, %{:from => until - 60 * 60 * 24 * 30, :until => until}}
+      true -> {:complete, %{:from => from, :until => until}}
+    end
+  end
+
   def update_timeframe(pid, %{from: f, until: u}) when is_pid(pid) do
     Agent.update(pid, fn state ->
       Map.replace!(state, :time_frame, %{:from => f, :until => u})
     end)
   end
 
+  def update_timeframe_until(pid, until) do
+    Agent.update(pid, fn state ->
+      Map.update!(state, :time_frame, fn time_frame ->
+        Map.replace!(time_frame, :until, until)
+      end)
+    end)
+  end
+
   def append_to_history(pid, new_history) when is_pid(pid) and is_list(new_history) do
     Agent.update(pid, fn state ->
       Map.update!(state, :history, fn current_history ->
-        [new_history | current_history] |> List.flatten()
+        [(new_history |> Enum.reverse()) | current_history] |> List.flatten()
       end)
     end)
   end

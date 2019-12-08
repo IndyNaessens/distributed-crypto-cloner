@@ -21,8 +21,7 @@ defmodule Assignment.PoloniexAPiCaller do
     Assignment.Logger.log(
       :info,
       "Requesting coin trade history: #{currency_name} -> start: #{start_date_unix} end: #{
-        end_date_unix
-      }"
+        end_date_unix} - #{div((end_date_unix - start_date_unix), 86400)} days"
     )
 
     Assignment.Logger.log(
@@ -46,7 +45,7 @@ defmodule Assignment.PoloniexAPiCaller do
   end
 
   defp handle_response({:error, %{id: _id, reason: msg}}) do
-    Assignment.Logger.log(:error, "Failed while handling repsonse, status: #{msg}")
-    %{}
+    Assignment.Logger.log(:error, "PoloniexAPiCaller - Failed while handling repsonse, reason: #{msg}")
+    :poloniex_api_error
   end
 end

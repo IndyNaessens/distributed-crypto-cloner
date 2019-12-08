@@ -36,35 +36,37 @@ defmodule Assignment.CoindataRetriever do
     # needed for work (pid, timeframe)
     history_keeper_pid = Assignment.HistoryKeeperManager.get_pid_for(coin_name)
 
-    %{:from => f, :until => u} =
-      Assignment.HistoryKeeperWorker.request_timeframe(history_keeper_pid)
+    {time_frame_complete, %{:from => f, :until => u}} =
+      Assignment.HistoryKeeperWorker.request_timeframe_for_api_call(history_keeper_pid)
 
     # retrieve trade history, new until date and if the respone was full (1000 elems)
-    {history, until, filled} =
+    {history, until, continue} =
       Assignment.PoloniexAPiCaller.return_trade_history(coin_name, f, u)
-      |> handle_response()
+      |> handle_response(u)
 
     # include retrieved history and update timeframe
-    Assignment.HistoryKeeperWorker.update_timeframe(history_keeper_pid, %{
-      :from => f,
-      :until => until
-    })
-
     Assignment.HistoryKeeperWorker.append_to_history(history_keeper_pid, history)
+    Assignment.HistoryKeeperWorker.update_timeframe_until(history_keeper_pid, until)
 
-    # if we don't have the whole tradehistory (response -> 1000 elems) ask for a new request
-    if filled == :full, do: GenServer.cast(self(), :request_work_permission)
+    # continue/retry when we don't have the whole tradehistory/when the api gave an error
+    if continue == :yes or time_frame_complete == :part,
+      do: GenServer.cast(self(), :request_work_permission)
+
     {:noreply, coin_name}
   end
 
   ### HELPERS
-  defp handle_response(trade_history)
+  defp handle_response(trade_history, _until)
        when is_list(trade_history) and length(trade_history) == 1000 do
-    {trade_history, get_last_date_in_trade_history(trade_history), :full}
+    {trade_history, get_last_date_in_trade_history(trade_history), :yes}
   end
 
-  defp handle_response(trade_history) when is_list(trade_history) do
-    {trade_history, get_last_date_in_trade_history(trade_history), :notfull}
+  defp handle_response(trade_history, _until) when is_list(trade_history) do
+    {trade_history, get_last_date_in_trade_history(trade_history), :no}
+  end
+
+  defp handle_response(:poloniex_api_error, until) do
+    {[], until, :yes}
   end
 
   defp get_last_date_in_trade_history(trade_history) do
