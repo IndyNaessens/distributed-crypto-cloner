@@ -2,9 +2,13 @@ defmodule Assignment.HistoryKeeperWorker do
   @moduledoc """
   This is the HistoryKeeperWorker module
 
+  The CoinDataRetriever module uses this module to store the retrieved history
   It uses an Agent to hold/update the following state
   - coin_name (string/binary)
-  - time_frame (time frame of the history)
+  - time_frame (time frame of the history we want to keep)
+      This time_frame becomes smaller (until comes closer to from) when we the CoinDataRetrievers retrieve the history
+      This is because PoloniexApiCaller can't return the history in 1 call because the api has a max of 1000 trades
+      it can return, so we need to adjust our timeframe hence it becomes smaller over time
   - history (trade history for the specified coin_name)
   """
   use Agent
@@ -76,7 +80,7 @@ defmodule Assignment.HistoryKeeperWorker do
   def append_to_history(pid, new_history) when is_pid(pid) and is_list(new_history) do
     Agent.update(pid, fn state ->
       Map.update!(state, :history, fn current_history ->
-        [(new_history |> Enum.reverse()) | current_history] |> List.flatten()
+        [new_history |> Enum.reverse() | current_history] |> List.flatten()
       end)
     end)
   end

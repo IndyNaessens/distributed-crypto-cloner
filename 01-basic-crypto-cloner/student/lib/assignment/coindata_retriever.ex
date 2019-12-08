@@ -42,7 +42,7 @@ defmodule Assignment.CoindataRetriever do
     # retrieve trade history, new until date and if the respone was full (1000 elems)
     {history, until, continue} =
       Assignment.PoloniexAPiCaller.return_trade_history(coin_name, f, u)
-      |> handle_response(u)
+      |> handle_response({f,u})
 
     # include retrieved history and update timeframe
     Assignment.HistoryKeeperWorker.append_to_history(history_keeper_pid, history)
@@ -56,16 +56,16 @@ defmodule Assignment.CoindataRetriever do
   end
 
   ### HELPERS
-  defp handle_response(trade_history, _until)
+  defp handle_response(trade_history, _time_frame)
        when is_list(trade_history) and length(trade_history) == 1000 do
     {trade_history, get_last_date_in_trade_history(trade_history), :yes}
   end
 
-  defp handle_response(trade_history, _until) when is_list(trade_history) do
-    {trade_history, get_last_date_in_trade_history(trade_history), :no}
+  defp handle_response(trade_history, {from, _until}) when is_list(trade_history) do
+    {trade_history, from, :no}
   end
 
-  defp handle_response(:poloniex_api_error, until) do
+  defp handle_response(:poloniex_api_error, {_from,until}) do
     {[], until, :yes}
   end
 
