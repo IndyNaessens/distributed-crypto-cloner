@@ -119,12 +119,7 @@ defmodule Assignment.HistoryKeeperWorker do
       )
 
     # calc progress in % and chars
-    progress =
-      case time_diff do
-        0 -> 100
-        _ -> (time_diff / reference_time_diff) |> Float.floor() |> Kernel.trunc()
-      end
-
+    progress = (1 - (time_diff / reference_time_diff)) * 100 |> Float.round(2)
     progress_chars = (progress / 5) |> Float.floor() |> Kernel.trunc()
 
     # put the stats in a map for ease of display

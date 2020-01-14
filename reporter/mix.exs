@@ -1,9 +1,9 @@
-defmodule Assignment.MixProject do
+defmodule Reporter.MixProject do
   use Mix.Project
 
   def project do
     [
-      app: :assignment,
+      app: :reporter,
       version: "0.1.0",
       elixir: "~> 1.9",
       start_permanent: Mix.env() == :prod,
@@ -15,15 +15,14 @@ defmodule Assignment.MixProject do
   def application do
     [
       extra_applications: [:logger],
-      mod: {Assignment.Application, []}
+      mod: {Assignment.Reporter.Application, []}
     ]
   end
 
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:httpoison, "~> 1.6"},
-      {:poison, "~> 4.0"},
+      {:scribe, "~> 0.10.0"},
       {:libcluster, "~> 3.2"}
     ]
   end

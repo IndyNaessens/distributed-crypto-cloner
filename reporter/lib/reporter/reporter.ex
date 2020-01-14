@@ -18,13 +18,23 @@ defmodule Assignment.Reporter do
   end
 
   def handle_info(:render_table, state) do
-    Assignment.HistoryKeeperManager.retrieve_history_processes()
-    |> Enum.map(fn {_coin, pid} -> Assignment.HistoryKeeperWorker.get_statistics(pid) end)
-    |> Scribe.print(data: [{"NODE", :node}, {"COIN", :coin}, {"PROGRESS (20chars)", :progress_chars}, {"PROGRESS %", :progress}, {"# of entries", :entries}])
+    Node.list()
+    |> Enum.map(
+      &GenServer.call({Assignment.CoindataCoordinator, &1}, :get_history_keeper_worker_statistics)
+    )
+    |> List.flatten()
+    |> Scribe.print(
+      data: [
+        {"NODE", :node},
+        {"COIN", :coin},
+        {"PROGRESS (20chars)", :progress_chars},
+        {"PROGRESS %", :progress},
+        {"# of entries", :entries}
+      ]
+    )
 
     Process.send_after(__MODULE__, :render_table, 3000)
 
     {:noreply, state}
   end
-
 end

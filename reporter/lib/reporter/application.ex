@@ -1,4 +1,5 @@
-defmodule Assignment.Application do
+defmodule Assignment.Reporter.Application do
+
   use Application
 
   def start(_type, _args) do
@@ -10,14 +11,11 @@ defmodule Assignment.Application do
 
     children = [
       {Cluster.Supervisor, [topologies, [name: Assignment.ClusterSupervisor]]},
-      Assignment.Logger,
-      Assignment.CoindataSupervisor,
-      Assignment.HistoryKeeperSupervisor,
-      Assignment.RateLimiter,
-      Assignment.CoindataCoordinator
+      Assignment.Reporter
+
     ]
 
-    opts = [strategy: :one_for_one, name: Assignment.Supervisor]
+    opts = [strategy: :one_for_one, name: Reporter.Supervisor]
     Supervisor.start_link(children, opts)
   end
 end
