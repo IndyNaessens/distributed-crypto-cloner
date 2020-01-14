@@ -23,7 +23,8 @@ defmodule Assignment.MixProject do
   defp deps do
     [
       {:httpoison, "~> 1.6"},
-      {:poison, "~> 4.0"}
+      {:poison, "~> 4.0"},
+      {:scribe, "~> 0.10.0"}
     ]
   end
 end

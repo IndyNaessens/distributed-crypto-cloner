@@ -6,10 +6,12 @@ defmodule Assignment.Application do
       Assignment.Logger,
       Assignment.CoindataSupervisor,
       Assignment.HistoryKeeperSupervisor,
-      Assignment.RateLimiter
+      Assignment.RateLimiter,
+      { Task, fn -> Assignment.CoindataCoordinator.start end }
     ]
 
     opts = [strategy: :one_for_one, name: Assignment.Supervisor]
     Supervisor.start_link(children, opts)
   end
+
 end

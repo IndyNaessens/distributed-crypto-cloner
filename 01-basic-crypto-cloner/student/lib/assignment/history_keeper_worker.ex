@@ -5,6 +5,9 @@ defmodule Assignment.HistoryKeeperWorker do
   The CoinDataRetriever module uses this module to store the retrieved history
   It uses an Agent to hold/update the following state
   - coin_name (string/binary)
+  - :reference_time_frame
+      This time_frame is used to calculate progress. How much of the time frame is already complete?
+      In other words this is the original time frame
   - time_frame (time frame of the history we want to keep)
       This time_frame becomes smaller (until comes closer to from) when we the CoinDataRetrievers retrieve the history
       This is because PoloniexApiCaller can't return the history in 1 call because the api has a max of 1000 trades
@@ -19,6 +22,10 @@ defmodule Assignment.HistoryKeeperWorker do
       fn ->
         %{
           :coin => coin_name,
+          :reference_time_frame => %{
+            :from => Application.fetch_env!(:assignment, :from),
+            :until => Application.fetch_env!(:assignment, :until)
+          },
           :time_frame => %{
             :from => Application.fetch_env!(:assignment, :from),
             :until => Application.fetch_env!(:assignment, :until)
@@ -70,6 +77,10 @@ defmodule Assignment.HistoryKeeperWorker do
     Agent.update(pid, fn state ->
       Map.replace!(state, :time_frame, %{:from => f, :until => u})
     end)
+
+    Agent.update(pid, fn state ->
+      Map.replace!(state, :reference_time_frame, %{:from => f, :until => u})
+    end)
   end
 
   def update_timeframe_until(pid, until) do
@@ -85,6 +96,47 @@ defmodule Assignment.HistoryKeeperWorker do
       Map.update!(state, :history, fn current_history ->
         [new_history |> Enum.reverse() | current_history] |> List.flatten()
       end)
+    end)
+  end
+
+  def get_statistics(pid) do
+    # get time diff from ref_time_frame
+    reference_time_frame = Agent.get(pid, fn state -> Map.get(state, :reference_time_frame) end)
+
+    reference_time_diff =
+      DateTime.diff(
+        Map.get(reference_time_frame, :until) |> DateTime.from_unix!(),
+        Map.get(reference_time_frame, :from) |> DateTime.from_unix!()
+      )
+
+    # get time diff from time_frame
+    time_frame = Agent.get(pid, fn state -> Map.get(state, :time_frame) end)
+
+    time_diff =
+      DateTime.diff(
+        Map.get(time_frame, :until) |> DateTime.from_unix!(),
+        Map.get(time_frame, :from) |> DateTime.from_unix!()
+      )
+
+    # calc progress in % and chars
+    progress =
+      case time_diff do
+        0 -> 100
+        _ -> (time_diff / reference_time_diff) |> Float.floor() |> Kernel.trunc()
+      end
+
+    progress_chars = (progress / 5) |> Float.floor() |> Kernel.trunc()
+
+    # put the stats in a map for ease of display
+    Agent.get(pid, fn state ->
+      %{
+        :node => Node.self() |> Atom.to_string() |> String.split("@") |> List.first(),
+        :coin => Map.get(state, :coin),
+        :entries => Map.get(state, :history) |> length(),
+        :progress => "#{progress}%",
+        :progress_chars =>
+          "#{String.duplicate("_", 20 - progress_chars)}#{String.duplicate("+", progress_chars)}"
+      }
     end)
   end
 end
