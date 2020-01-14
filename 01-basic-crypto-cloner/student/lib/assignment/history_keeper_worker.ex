@@ -119,7 +119,7 @@ defmodule Assignment.HistoryKeeperWorker do
       )
 
     # calc progress in % and chars
-    progress = (1 - (time_diff / reference_time_diff)) * 100 |> Float.round(2)
+    progress = ((1 - time_diff / reference_time_diff) * 100) |> Float.round(2)
     progress_chars = (progress / 5) |> Float.floor() |> Kernel.trunc()
 
     # put the stats in a map for ease of display
@@ -128,7 +128,8 @@ defmodule Assignment.HistoryKeeperWorker do
         :node => Node.self() |> Atom.to_string() |> String.split("@") |> List.first(),
         :coin => Map.get(state, :coin),
         :entries => Map.get(state, :history) |> length(),
-        :progress => "#{progress}%",
+        :progress => progress,
+        :progress_percent => "#{progress}%",
         :progress_chars =>
           "#{String.duplicate("_", 20 - progress_chars)}#{String.duplicate("+", progress_chars)}"
       }

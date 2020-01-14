@@ -23,18 +23,25 @@ defmodule Assignment.Reporter do
       &GenServer.call({Assignment.CoindataCoordinator, &1}, :get_history_keeper_worker_statistics)
     )
     |> List.flatten()
+    |> Enum.sort_by(&Map.get(&1, :progress))
+    |> pass_and_clear()
     |> Scribe.print(
       data: [
         {"NODE", :node},
         {"COIN", :coin},
         {"PROGRESS (20chars)", :progress_chars},
-        {"PROGRESS %", :progress},
+        {"PROGRESS %", :progress_percent},
         {"# of entries", :entries}
       ]
     )
 
-    Process.send_after(__MODULE__, :render_table, 3000)
+    Process.send_after(__MODULE__, :render_table, 2000)
 
     {:noreply, state}
+  end
+
+  defp pass_and_clear(value) do
+    IEx.Helpers.clear()
+    value
   end
 end
