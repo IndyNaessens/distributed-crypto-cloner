@@ -11,20 +11,23 @@ defmodule Assignment.HistoryKeeperWorker do
       it can return, so we need to adjust our timeframe hence it becomes smaller over time
   - history (trade history for the specified coin_name)
   """
-  use Agent
+  use Agent, restart: :transient
 
   # API
   def start_link(coin_name) do
-    Agent.start_link(fn ->
-      %{
-        :coin => coin_name,
-        :time_frame => %{
-          :from => Application.fetch_env!(:assignment, :from),
-          :until => Application.fetch_env!(:assignment, :until)
-        },
-        :history => []
-      }
-    end)
+    Agent.start_link(
+      fn ->
+        %{
+          :coin => coin_name,
+          :time_frame => %{
+            :from => Application.fetch_env!(:assignment, :from),
+            :until => Application.fetch_env!(:assignment, :until)
+          },
+          :history => []
+        }
+      end,
+      name: {:via, Registry, {Assignment.HistoryKeeper.Registry, coin_name}}
+    )
   end
 
   def get_history(pid) when is_pid(pid) do

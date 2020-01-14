@@ -2,9 +2,9 @@ defmodule Assignment.CoindataSupervisor do
   @moduledoc """
   This is the CoindataSupervisor module.
 
-  It supervises the following modules with a rest_for_one strategy
+  It supervises the following modules with a one_for_one strategy
    - CoindataRetrieverSupervisor
-   - ProcessManager
+   - Coindata.Registry
   """
   use Supervisor
 
@@ -14,10 +14,10 @@ defmodule Assignment.CoindataSupervisor do
 
   def init([]) do
     children = [
-      Assignment.CoindataRetrieverSupervisor,
-      Assignment.ProcessManager
+      { Registry, keys: :unique, name: Assignment.Coindata.Registry },
+      Assignment.CoindataRetrieverSupervisor
     ]
 
-    Supervisor.init(children, strategy: :rest_for_one)
+    Supervisor.init(children, strategy: :one_for_one)
   end
 end

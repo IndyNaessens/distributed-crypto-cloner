@@ -2,9 +2,9 @@ defmodule Assignment.HistoryKeeperSupervisor do
     @moduledoc """
   This is the HistoryKeeperSupervisor module.
 
-  It supervises the following modules with a rest_for_one strategy
+  It supervises the following modules with a one_for_one strategy
    - HistoryKeeperWorkerSupervisor
-   - HistoryKeeperManager
+   - HistoryKeeper.Registry
   """
   use Supervisor
 
@@ -14,10 +14,10 @@ defmodule Assignment.HistoryKeeperSupervisor do
 
   def init([]) do
     children = [
-      Assignment.HistoryKeeperWorkerSupervisor,
-      Assignment.HistoryKeeperManager
+      { Registry, keys: :unique, name: Assignment.HistoryKeeper.Registry },
+      Assignment.HistoryKeeperWorkerSupervisor
     ]
 
-    Supervisor.init(children, strategy: :rest_for_one)
+    Supervisor.init(children, strategy: :one_for_one)
   end
 end
