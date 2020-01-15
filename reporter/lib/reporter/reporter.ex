@@ -18,7 +18,7 @@ defmodule Assignment.Reporter do
   end
 
   def handle_continue(:start, state) do
-    send(__MODULE__, :render_table)
+    Process.send_after(__MODULE__, :render_table, 1000)
 
     {:noreply, state}
   end
