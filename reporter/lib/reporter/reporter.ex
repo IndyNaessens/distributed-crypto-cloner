@@ -18,9 +18,10 @@ defmodule Assignment.Reporter do
   end
 
   def handle_info(:render_table, state) do
+
     Node.list()
     |> Enum.map(
-      &GenServer.call({Assignment.CoindataCoordinator, &1}, :get_history_keeper_worker_statistics)
+      &GenServer.call(:global.whereis_name({&1, Assignment.CoindataCoordinator}), :get_history_keeper_worker_statistics)
     )
     |> List.flatten()
     |> Enum.sort_by(&Map.get(&1, :progress))
