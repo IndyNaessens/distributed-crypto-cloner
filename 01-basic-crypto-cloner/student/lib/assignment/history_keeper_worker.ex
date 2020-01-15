@@ -93,6 +93,9 @@ defmodule Assignment.HistoryKeeperWorker do
     end)
   end
 
+  @doc """
+  Used for progress
+  """
   def update_timeframe_until(pid, until) do
     Agent.update(pid, fn state ->
       Map.update!(state, :time_frame, fn time_frame ->

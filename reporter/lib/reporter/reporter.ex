@@ -1,4 +1,10 @@
 defmodule Assignment.Reporter do
+  @moduledoc """
+  This is the Reporter module
+
+  It 'renders' a table to the console/shell
+  with statistics of worker nodes from the cluster it's connected to
+  """
   use GenServer
 
   # API
@@ -20,10 +26,12 @@ defmodule Assignment.Reporter do
   def handle_info(:render_table, state) do
     table_data =
     Node.list()
+    # get statistics of each worker in each node
     |> Enum.map(
       &GenServer.call(:global.whereis_name({&1, Assignment.CoindataCoordinator}), :get_history_keeper_worker_statistics)
     )
     |> List.flatten()
+    # sort by progress (descending)
     |> Enum.sort_by(&Map.get(&1, :progress), &>=/2)
 
     IEx.Helpers.clear()
@@ -37,7 +45,7 @@ defmodule Assignment.Reporter do
       ]
     )
     IO.puts("Total of #{table_data |> length} entries")
-    Process.send_after(__MODULE__, :render_table, 2000)
+    Process.send_after(__MODULE__, :render_table, 10_000)
 
     {:noreply, state}
   end

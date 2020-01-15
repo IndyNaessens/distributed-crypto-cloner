@@ -1,4 +1,12 @@
 defmodule Assignment.CoindataCoordinator do
+  @moduledoc """
+  This is the CoindataCoordinator module
+
+  It acts as an entry point for other nodes in a cluster
+  or as a general facade for the underlying modules
+
+  It's globally registered
+  """
   use GenServer
 
   # API
@@ -94,7 +102,7 @@ defmodule Assignment.CoindataCoordinator do
          )}
       end)
       # include ourself
-      |> Enum.concat([{Node.self, Assignment.HistoryKeeperManager.retrieve_history_processes()}])
+      |> Enum.concat([{Node.self(), Assignment.HistoryKeeperManager.retrieve_history_processes()}])
       # map to {node, coin} so we now which node handles wich coin
       |> Enum.map(fn {node, list} -> Enum.map(list, fn pair -> {node, elem(pair, 0)} end) end)
       # flatten the list so we have 1 list instead of N node lists in a list
@@ -118,11 +126,13 @@ defmodule Assignment.CoindataCoordinator do
     # sort on progress for the balancing
     |> Enum.sort_by(fn {node_from, coin_name} ->
       cond do
+        # we can't call ourself
         node_from == Node.self() ->
           Assignment.HistoryKeeperManager.get_pid_for(coin_name)
           |> Assignment.HistoryKeeperWorker.get_statistics()
           |> Map.get(:progress)
 
+        # we can call other GenServers
         node_from != nil ->
           GenServer.call(
             {:global, {node_from, __MODULE__}},
@@ -130,6 +140,7 @@ defmodule Assignment.CoindataCoordinator do
           )
           |> Map.get(:progress)
 
+        # unhandled coins so progress is 0
         true ->
           0.00
       end
@@ -149,9 +160,11 @@ defmodule Assignment.CoindataCoordinator do
     # if the coin is not handled by a node, start it
     |> Enum.each(fn coin_info_for_balancing ->
       case coin_info_for_balancing do
+        # start
         {{nil, coin_name}, node_to} ->
           GenServer.cast({:global, {node_to, __MODULE__}}, {:add_coin, coin_name})
 
+        # transfer
         {{node_from, coin_name}, node_to} ->
           GenServer.cast(
             {:global, {node_from, __MODULE__}},
@@ -185,7 +198,7 @@ defmodule Assignment.CoindataCoordinator do
       {Assignment.ProcessManager.get_pid_for(coin_name),
        Assignment.HistoryKeeperManager.get_pid_for(coin_name)}
 
-    # get state frrom historykeeper
+    # get state from historykeeper
     state_from_keeper = Assignment.HistoryKeeperWorker.get_state(keeper_pid)
 
     # stop retriever and keeper
