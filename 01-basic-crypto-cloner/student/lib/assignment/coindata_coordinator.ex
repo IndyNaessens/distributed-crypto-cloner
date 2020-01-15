@@ -94,7 +94,7 @@ defmodule Assignment.CoindataCoordinator do
          )}
       end)
       # include ourself
-      |> Enum.concat(Assignment.HistoryKeeperManager.retrieve_history_processes())
+      |> Enum.concat([{Node.self, Assignment.HistoryKeeperManager.retrieve_history_processes()}])
       # map to {node, coin} so we now which node handles wich coin
       |> Enum.map(fn {node, list} -> Enum.map(list, fn pair -> {node, elem(pair, 0)} end) end)
       # flatten the list so we have 1 list instead of N node lists in a list

@@ -24,7 +24,7 @@ defmodule Assignment.Reporter do
       &GenServer.call(:global.whereis_name({&1, Assignment.CoindataCoordinator}), :get_history_keeper_worker_statistics)
     )
     |> List.flatten()
-    |> Enum.sort_by(&Map.get(&1, :progress))
+    |> Enum.sort_by(&Map.get(&1, :progress), &>=/2)
 
     IEx.Helpers.clear()
     Scribe.print(table_data,

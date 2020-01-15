@@ -10,10 +10,9 @@ defmodule Assignment.Application do
 
     children = [
       {Cluster.Supervisor, [topologies, [name: Assignment.ClusterSupervisor]]},
-      Assignment.Logger,
-      Assignment.CoindataSupervisor,
-      Assignment.HistoryKeeperSupervisor,
       Assignment.RateLimiter,
+      Assignment.HistoryKeeperSupervisor,
+      Assignment.CoindataSupervisor,
       Assignment.CoindataCoordinator
     ]
 
