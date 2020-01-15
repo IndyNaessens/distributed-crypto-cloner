@@ -203,7 +203,7 @@ defmodule Assignment.CoindataCoordinator do
 
     # stop retriever and keeper
     GenServer.stop(retriever_pid)
-    GenServer.stop(keeper_pid)
+    Agent.stop(keeper_pid)
 
     # start keeper with state and start retriever on new node
     GenServer.cast(
