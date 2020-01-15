@@ -12,8 +12,13 @@ defmodule Assignment.HistoryKeeperWorkerSupervisor do
     DynamicSupervisor.start_link(__MODULE__, [], name: __MODULE__)
   end
 
-  def add_worker(coin_name) do
+  def add_worker(coin_name) when is_binary(coin_name) do
     spec = {Assignment.HistoryKeeperWorker, coin_name}
+    DynamicSupervisor.start_child(__MODULE__, spec)
+  end
+
+  def add_worker(state) when is_map(state) do
+    spec = {Assignment.HistoryKeeperWorker, state}
     DynamicSupervisor.start_child(__MODULE__, spec)
   end
 

@@ -9,7 +9,8 @@ defmodule Assignment.CoindataRetriever do
   ### API
   def start_link(coin_name) when is_binary(coin_name) do
     GenServer.start_link(__MODULE__, coin_name,
-      name: {:via, Registry, {Assignment.Coindata.Registry, coin_name}})
+      name: {:via, Registry, {Assignment.Coindata.Registry, coin_name}}
+    )
   end
 
   def get_coin_name(pid) when is_pid(pid) do
@@ -18,7 +19,13 @@ defmodule Assignment.CoindataRetriever do
 
   ### SERVER
   def init(coin_name) do
-    {:ok, coin_name}
+    {:ok, coin_name, {:continue, :ask_for_work}}
+  end
+
+  def handle_continue(:ask_for_work, coin_name) do
+    GenServer.cast(self(), :request_work_permission)
+
+    {:noreply, coin_name}
   end
 
   ### CALLS ###

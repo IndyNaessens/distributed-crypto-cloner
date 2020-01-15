@@ -17,7 +17,7 @@ defmodule Assignment.HistoryKeeperWorker do
   use Agent, restart: :transient
 
   # API
-  def start_link(coin_name) do
+  def start_link(coin_name) when is_binary(coin_name) do
     Agent.start_link(
       fn ->
         %{
@@ -35,6 +35,16 @@ defmodule Assignment.HistoryKeeperWorker do
       end,
       name: {:via, Registry, {Assignment.HistoryKeeper.Registry, coin_name}}
     )
+  end
+
+  def start_link(state) when is_map(state) do
+    Agent.start_link(fn -> state end,
+      name: {:via, Registry, {Assignment.HistoryKeeper.Registry, Map.get(state, :coin)}}
+    )
+  end
+
+  def get_state(pid) do
+    Agent.get(pid, fn state -> state end)
   end
 
   def get_history(pid) when is_pid(pid) do
